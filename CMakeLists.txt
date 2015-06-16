@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Some useful macros
-include(${CMAKE_SOURCE_DIR}/cmake/macros.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/macros.cmake)
 
 ################################################################################
 #                            GLOBAL CONFIGURATION                              #
@@ -34,16 +34,31 @@ set(NEURO_CAR_VERSION
 )
 
 # Configuration file
-include(${CMAKE_SOURCE_DIR}/cmake/config.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake)
 
 # Static library name
-set(NEURO_CAR_STATIC_LIBRARY_NAME NeuroCarLib)
+set(NEURO_CAR_STATIC_LIBRARY NeuroCarLib)
 
 # Executable name
 set(NEURO_CAR_EXECUTABLE_NAME NeuroCar)
 
 # Binary directory
-set(NEURO_CAR_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+set(NEURO_CAR_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+
+
+### Definitions ###
+
+# Enable/disable graphic mode
+set(NEURO_CAR_GRAPHIC_MODE ON CACHE BOOL "Enable/Disable graphic mode")
+if(NEURO_CAR_GRAPHIC_MODE)
+    set(CAR_PHYSICS_GRAPHIC_MODE ON)
+    add_definitions(-DNEURO_CAR_GRAPHIC_MODE=1)
+    add_definitions(-DCAR_PHYSICS_GRAPHIC_MODE_SFML=1)
+else()
+    set(CAR_PHYSICS_GRAPHIC_MODE OFF)
+    add_definitions(-DNEURO_CAR_GRAPHIC_MODE=0)
+    add_definitions(-DCAR_PHYSICS_GRAPHIC_MODE_SFML=0)
+endif()
 
 
 ################################################################################
@@ -60,7 +75,7 @@ if(NEURO_CAR_COMPILER_GCC OR NEURO_CAR_COMPILER_CLANG)
     # https://gcc.gnu.org/onlinedocs/gcc/C_002b_002b-Dialect-Options.html
     # http://stackoverflow.com/a/9862800
     set(CXX_BASE_FLAGS
-        "-W -Wall -Wextra -Weffc++ -pedantic"
+        "-W -Wall -Wextra -pedantic"
         "-Wold-style-cast -Wparentheses -Wlogical-op -Woverloaded-virtual"
         "-Wfloat-equal -Wpointer-arith -Wcast-align -Wcast-qual"
         "-Winit-self -Wwrite-strings -Wstrict-null-sentinel"
@@ -69,6 +84,7 @@ if(NEURO_CAR_COMPILER_GCC OR NEURO_CAR_COMPILER_CLANG)
         "-Wdisabled-optimization"
         "-Wnoexcept"
 
+        #"-Weffc++"
         #"-Wshadow"
         #"-Wsign-conversion"
         #"-Wconversion"
@@ -154,7 +170,7 @@ if(NEURO_CAR_OS_LINUX)
     # Clean up all generated files
     add_custom_target(
         trash
-        COMMAND rm -r ${CMAKE_SOURCE_DIR}/bin/* ${CMAKE_SOURCE_DIR}/build/*
+        COMMAND rm -r ${CMAKE_CURRENT_SOURCE_DIR}/bin/* ${CMAKE_CURRENT_SOURCE_DIR}/build/*
         COMMENT "Deleting generated files"
     )
 
@@ -191,12 +207,28 @@ set(NEURO_CAR_SOURCES
 
 # Static library
 set(LIBRARY_OUTPUT_PATH ${NEURO_CAR_BINARY_DIR})
-add_library(${NEURO_CAR_STATIC_LIBRARY_NAME}
+add_library(${NEURO_CAR_STATIC_LIBRARY}
     STATIC ${NEURO_CAR_HEADERS} ${NEURO_CAR_SOURCES}
 )
-target_link_libraries(${NEURO_CAR_STATIC_LIBRARY_NAME} ${NEURO_CAR_EXTERN_LIBRARIES})
+target_link_libraries(${NEURO_CAR_STATIC_LIBRARY} ${NEURO_CAR_EXTERN_LIBRARIES})
+
+
+# Submodules
+set(NEURO_CAR_SUBMODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+
+set(NEURO_EVOLUTION_SUBMODULE_DIR ${NEURO_CAR_SUBMODULE_DIR}/neuro_evo)
+add_subdirectory(${NEURO_EVOLUTION_SUBMODULE_DIR})
+include_directories(SYSTEM ${NEURO_EVOLUTION_INCLUDE_DIR} ${NEURO_EVOLUTION_EXTERN_INCLUDE_DIR})
+
+set(CAR_PHYSICS_SUBMODULE_DIR ${NEURO_CAR_SUBMODULE_DIR}/car_physics)
+add_subdirectory(${CAR_PHYSICS_SUBMODULE_DIR})
+include_directories(SYSTEM ${CAR_PHYSICS_INCLUDE_DIR} ${CAR_PHYSICS_EXTERN_INCLUDE_DIR})
 
 # Executable
 set(EXECUTABLE_OUTPUT_PATH ${NEURO_CAR_BINARY_DIR})
 add_executable(${NEURO_CAR_EXECUTABLE_NAME} ${NEURO_CAR_SOURCE_DIR}/main.cpp)
-target_link_libraries(${NEURO_CAR_EXECUTABLE_NAME} ${NEURO_CAR_STATIC_LIBRARY_NAME})
+target_link_libraries(${NEURO_CAR_EXECUTABLE_NAME}
+    ${NEURO_EVOLUTION_STATIC_LIBRARY}
+    ${CAR_PHYSICS_STATIC_LIBRARY}
+    ${NEURO_CAR_STATIC_LIBRARY}
+)
