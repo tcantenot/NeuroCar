@@ -1,0 +1,6 @@
+[submodule "lib/neuro_evo"]
+	path = lib/neuro_evo
+	url = git@github.com:tcantenot/NeuroEvolution.git
+[submodule "lib/car_physics"]
+	path = lib/car_physics
+	url = git@github.com:apeyrard/carPhysics.git
