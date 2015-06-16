@@ -1,0 +1,9 @@
+#ifndef NEURO_CAR_NEURO_CONTROLLER_HPP
+#define NEURO_CAR_NEURO_CONTROLLER_HPP
+
+class NeuroController
+{
+
+};
+
+#endif //NEURO_CAR_NEURO_CONTROLLER_HPP
