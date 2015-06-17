@@ -50,7 +50,7 @@ set(NEURO_CAR_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
 # Enable/disable graphic mode
 if(NOT DEFINED NEURO_CAR_GRAPHIC_MODE)
-    set(NEURO_CAR_GRAPHIC_MODE ON CACHE BOOL "Enable/Disable graphic mode")
+    set(NEURO_CAR_GRAPHIC_MODE OFF CACHE BOOL "Enable/Disable graphic mode")
 endif()
 
 if(NEURO_CAR_GRAPHIC_MODE)
