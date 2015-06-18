@@ -9,6 +9,7 @@ class DNA
     public:
         using Fitness = double;
         using MutationRate = double;
+        using Subject = T;
 
     public:
 
@@ -18,7 +19,8 @@ class DNA
         T const * getSubject() const { return m_subject; }
 
         virtual void randomize() = 0;
-        virtual Fitness fitness() const = 0;
+        virtual Fitness computeFitness() = 0;
+        virtual Fitness getFitness() const = 0;
         virtual T * crossover(DNAType const & partner) const = 0;
         virtual void mutate(MutationRate mutationRate) = 0;
 

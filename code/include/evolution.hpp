@@ -10,22 +10,13 @@
 namespace NeuroCar {
 
 template <typename T>
-using Individuals = std::vector<T*>;
+using Population = std::vector<T*>;
 
 template <typename DNAType>
-using Population = std::vector<DNAType>;
-
-// TODO:
-// How to handle the T entities created at each generation?
-template <typename DNAType>
-Population<DNAType> evolution(Population<DNAType> const & population);
-
+using DNAs = std::vector<DNAType>;
 
 template <typename DNAType, typename T>
-Population<DNAType> simulate(Individuals<T> const & individuals, std::size_t ngenerations);
-
-template <typename DNAType>
-void evaluate(Population<DNAType> const & population);
+DNAs<DNAType> evolve(Population<T> const & population, std::size_t ngenerations);
 
 }
 

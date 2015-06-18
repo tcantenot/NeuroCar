@@ -13,8 +13,18 @@
 
 namespace NeuroCar {
 
+namespace {
+
+static const char ALPHABET[] =
+    "abcdefghijklmnopqrstuvwxyz"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "0123456789 ";
+
+}
+
 EvolvingStringDNA::EvolvingStringDNA(EvolvingString * subject):
-    DNA(subject)
+    DNA(subject),
+    m_fitness(0.0)
 {
 
 }
@@ -25,7 +35,7 @@ void EvolvingStringDNA::randomize()
     m_subject->setGenes(EvolvingStringDNA::RandomString(m_subject->getTarget().size()));
 }
 
-EvolvingStringDNA::Fitness EvolvingStringDNA::fitness() const
+EvolvingStringDNA::Fitness EvolvingStringDNA::computeFitness()
 {
     assert(m_subject);
 
@@ -40,9 +50,16 @@ EvolvingStringDNA::Fitness EvolvingStringDNA::fitness() const
         if(genes[i] == target[i]) ++fitness;
     }
 
-    fitness /= genes.size();
+    fitness /= static_cast<Fitness>(genes.size());
+
+    m_fitness = fitness;
 
     return fitness;
+}
+
+EvolvingStringDNA::Fitness EvolvingStringDNA::getFitness() const
+{
+    return m_fitness;
 }
 
 EvolvingString * EvolvingStringDNA::crossover(EvolvingStringDNA const & partner) const
@@ -53,8 +70,8 @@ EvolvingString * EvolvingStringDNA::crossover(EvolvingStringDNA const & partner)
 
     std::size_t length = m_subject->getGenes().size();
 
-    std::random_device rd;
-    std::mt19937 rng(rd());
+    static std::random_device rd;
+    static std::default_random_engine rng(rd());
     std::uniform_int_distribution<> dist(0, length-1);
 
     uint32_t midpoint = dist(rng);
@@ -74,8 +91,8 @@ EvolvingString * EvolvingStringDNA::crossover(EvolvingStringDNA const & partner)
 
 void EvolvingStringDNA::mutate(MutationRate mutationRate)
 {
-    std::random_device rd;
-    std::mt19937 rng(rd());
+    static std::random_device rd;
+    static std::default_random_engine rng(rd());
     std::uniform_real_distribution<MutationRate> random(0.0, 1.0);
 
     auto & genes = m_subject->getGenes();
@@ -85,40 +102,39 @@ void EvolvingStringDNA::mutate(MutationRate mutationRate)
     {
         if(random(rng) < mutationRate)
         {
-            //TODO: optimize this
-            genes[i] = RandomString(1)[0];
+            genes[i] = RandomChar();
         }
     }
 }
 
 
+char EvolvingStringDNA::RandomChar()
+{
+    static std::random_device rd;
+    static std::default_random_engine rng(rd());
+    static std::uniform_int_distribution<> dist(0, sizeof(ALPHABET)/sizeof(*ALPHABET)-2);
+
+    return ALPHABET[dist(rng)];
+}
+
 std::string EvolvingStringDNA::RandomString(std::size_t length)
 {
-    static const char alphabet[] =
-        "abcdefghijklmnopqrstuvwxyz"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "0123456789 ";
-
-    std::random_device rd;
-    std::default_random_engine rng(rd());
-    std::uniform_int_distribution<> dist(0,sizeof(alphabet)/sizeof(*alphabet)-2);
-
     std::string str;
     str.reserve(length);
-    std::generate_n(std::back_inserter(str), length, [&]() { return alphabet[dist(rng)];});
+    std::generate_n(std::back_inserter(str), length, [&]() { return RandomChar(); });
 
     return str;
 }
 
 void evolutionTest()
 {
-    Individuals<EvolvingString> strings;
+    Population<EvolvingString> strings;
     for(auto i = 0; i < 200; ++i)
     {
         strings.push_back(new EvolvingString("To be or not to be"));
     }
 
-    Population<EvolvingStringDNA> dnas = simulate<EvolvingStringDNA>(strings, 300);
+    DNAs<EvolvingStringDNA> dnas = evolve<EvolvingStringDNA>(strings, 100);
 
     for(auto & dna: dnas)
     {
