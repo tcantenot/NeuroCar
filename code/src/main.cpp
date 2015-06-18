@@ -3,7 +3,9 @@
 #include <staticbox.hpp>
 #include <world.hpp>
 
-int main()
+#include <evolving_string.hpp>
+
+void carTest()
 {
     uint32_t worldWidth = 100;
     uint32_t worldHeight = 80;
@@ -50,6 +52,12 @@ int main()
     w.addDrawable(car);
 
     w.run();
+}
 
+
+int main()
+{
+    //carTest();
+    NeuroCar::evolutionTest();
     return 0;
 }
