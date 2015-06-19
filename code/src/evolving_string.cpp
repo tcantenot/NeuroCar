@@ -134,7 +134,10 @@ void stringEvolution()
         strings.push_back(new EvolvingString("To be or not to be"));
     }
 
-    DNAs<EvolvingStringDNA> dnas = evolve<EvolvingStringDNA>(strings, 10000);
+    EvolutionParams params;
+    params.mutationRate = 0.02;
+
+    DNAs<EvolvingStringDNA> dnas = evolve<EvolvingStringDNA>(strings, 10000, params);
 
     for(auto & dna: dnas)
     {

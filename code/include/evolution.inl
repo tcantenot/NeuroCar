@@ -29,7 +29,12 @@ using MatingPool = std::vector<RankedDNA<DNAType>>;
 
 
 template <typename DNAType>
-void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType> & matingPool)
+void evolution(
+    DNAs<DNAType> & dnas,
+    DNAs<DNAType> & nextGen,
+    MatingPool<DNAType> & matingPool,
+    EvolutionParams const & params
+)
 {
     assert(dnas.size() > 0);
     assert(nextGen.size() == dnas.size());
@@ -84,7 +89,7 @@ void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType
     );
 
     // TODO: do this in parallel
-    // -> map reduce
+    // -> map reduce with openmp (not mpi) (allocate std::vector(omp_get_num_thread()) as accu
     Fitness cumulativeScore = 0.0;
     for(auto & dna: matingPool)
     {
@@ -93,7 +98,7 @@ void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType
     }
 
     // Reproduce
-    MutationRate const mutationRate = 0.01;
+    MutationRate const mutationRate = params.mutationRate;
     #pragma omp parallel
     {
         // Create a random generator per thread
@@ -138,7 +143,11 @@ void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType
 }
 
 template <typename DNAType, typename T>
-DNAs<DNAType> evolve(Population<T> const & population, std::size_t ngenerations)
+DNAs<DNAType> evolve(
+    Population<T> const & population,
+    std::size_t ngenerations,
+    EvolutionParams const & params
+)
 {
     static_assert(
         std::is_base_of<DNA<T, DNAType>, DNAType>::value,
@@ -181,7 +190,7 @@ DNAs<DNAType> evolve(Population<T> const & population, std::size_t ngenerations)
     {
         std::cout << "Generation " << i << std::endl;
 
-        evolution(dnas, nextGen, matingPool);
+        evolution(dnas, nextGen, matingPool, params);
         std::swap(nextGen, dnas);
     }
 

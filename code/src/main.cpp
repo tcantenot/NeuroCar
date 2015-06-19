@@ -1,7 +1,5 @@
 #include <cstdint>
 
-#include <mpi.hpp>
-
 #include <car.hpp>
 #include <renderer.hpp>
 #include <staticbox.hpp>
@@ -11,11 +9,8 @@
 
 void carTest();
 
-int main(int argc, char ** argv)
+int main()
 {
-    // Initialize MPI
-    //MPIInitializer(argc, argv);
-
     //carTest();
     NeuroCar::stringEvolution();
 
