@@ -45,7 +45,7 @@ struct EvolvingString
 class EvolvingStringDNA : public DNA<EvolvingString, EvolvingStringDNA>
 {
     public:
-        EvolvingStringDNA(EvolvingString * subject);
+        EvolvingStringDNA(EvolvingString * subject = nullptr);
 
         virtual void randomize() override;
         virtual Fitness computeFitness() override;

@@ -10,16 +10,36 @@ namespace NeuroCar {
 namespace {
 
 template <typename DNAType>
-DNAs<DNAType> evolution(DNAs<DNAType> & dnas)
+struct RankedDNA
 {
-    #if 0
+    using DNARef = std::reference_wrapper<const DNAType>;
+    using Score  = typename DNAType::Fitness;
+
+    DNARef dna;
+    Score score;
+
+    RankedDNA(DNARef d, Score s): dna(d), score(s) { }
+};
+
+template <typename DNAType>
+using MatingPool = std::vector<RankedDNA<DNAType>>;
+
+
+template <typename DNAType>
+void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType> & matingPool)
+{
     static_assert(
-        std::is_base_of<DNA<DNAType::Subject, DNAType>>::value,
-        "DNAType must inherits from DNA"
+        std::is_default_constructible<DNAType>::value,
+        "DNAType must be default constructible"
     );
-    #endif
+
+    static_assert(
+        std::is_base_of<DNA<typename DNAType::Subject, DNAType>, DNAType>::value,
+        "DNAType must inherits from DNA<T, DNAType>"
+    );
 
     assert(dnas.size() > 0);
+    assert(nextGen.size() == dnas.size());
 
     // Train
     // TODO: do this in parallel
@@ -47,39 +67,30 @@ DNAs<DNAType> evolution(DNAs<DNAType> & dnas)
 
 
     // Create the mating pool
-
-    //TODO: create a struct for RankedDNA -> better readability
-    // + use std::ref<DNA> ?
-    using RankedDNA  = std::pair<std::reference_wrapper<const DNAType>, Fitness>;
-    using MatingPool = std::vector<RankedDNA>;
-
-    MatingPool matingPool;
-    matingPool.reserve(dnas.size());
-
-    for(auto const & dna: dnas)
+    for(auto i = 0u; i < dnas.size(); ++i)
     {
-        matingPool.emplace_back(std::cref(dna), dna.getFitness() / cumulativeFitness);
+        auto const & dna = dnas[i];
+        matingPool[i] = RankedDNA<DNAType>(std::cref(dna), dna.getFitness() / cumulativeFitness);
     }
 
     // Reverse sort: greatest relative fitness to lowest
     std::sort(std::begin(matingPool), std::end(matingPool),
-        [](RankedDNA const & lhs, RankedDNA const & rhs)
+        [](RankedDNA<DNAType> const & lhs, RankedDNA<DNAType> const & rhs)
         {
-            return lhs.second > rhs.second;
+            return lhs.score > rhs.score;
         }
     );
 
-    // FIXME: find better name
     Fitness cumulativeScore = 0.0;
     for(auto & dna: matingPool)
     {
-        cumulativeScore += dna.second;
-        dna.second = cumulativeScore;
+        cumulativeScore += dna.score;
+        dna.score = cumulativeScore;
     }
 
     // Reproduce
-    //
-    static auto const selectParent = [&matingPool]() -> DNAType const &
+
+    static auto const selectParent = [](MatingPool<DNAType> & matingPool) -> DNAType const &
     {
         static std::random_device rd;
         static std::mt19937 rng(rd());
@@ -88,24 +99,23 @@ DNAs<DNAType> evolution(DNAs<DNAType> & dnas)
         Fitness r = random(rng);
         for(auto i = 0u; i < matingPool.size()-1; ++i)
         {
-            if(matingPool[i].second > r)
+            if(matingPool[i].score > r)
             {
-                return matingPool[i].first;
+                return matingPool[i].dna;
             }
         }
 
-        return matingPool[matingPool.size()-1].first;
+        return matingPool[matingPool.size()-1].dna;
     };
 
-    typename DNAType::MutationRate const mutationRate = 0.01;
+    using MutationRate = typename DNAType::MutationRate;
 
-    DNAs<DNAType> nextGeneration;
-    nextGeneration.reserve(dnas.size());
+    MutationRate const mutationRate = 0.01;
 
     for(auto i = 0u; i < dnas.size(); ++i)
     {
-        DNAType const & parentA = selectParent();
-        DNAType const & parentB = selectParent();
+        DNAType const & parentA = selectParent(matingPool);
+        DNAType const & parentB = selectParent(matingPool);
 
         //TODO:
         // - When to remove the T entity?
@@ -113,10 +123,8 @@ DNAs<DNAType> evolution(DNAs<DNAType> & dnas)
         DNAType childDNA(child);
         childDNA.mutate(mutationRate);
 
-        nextGeneration.emplace_back(std::move(childDNA));
+        nextGen[i] = std::move(childDNA);
     }
-
-    return nextGeneration;
 }
 
 }
@@ -138,19 +146,35 @@ DNAs<DNAType> evolve(Population<T> const & population, std::size_t ngenerations)
 
     assert(dnas.size() == population.size());
 
+    // Initialize a dummy mating pool
+    MatingPool<DNAType> matingPool;
+    matingPool.reserve(population.size());
+    for(auto const & dna: dnas)
+    {
+        matingPool.emplace_back(std::cref(dna), 0.0);
+    }
+
+    // Initialize the container for the next generation
+    DNAs<DNAType> nextGen;
+    nextGen.resize(population.size());
+
     // Evolve
+    DNAs<DNAType> * dnasPtr    = &dnas;
+    DNAs<DNAType> * nextGenPtr = &nextGen;
     for(auto i = 0u; i < ngenerations; ++i)
     {
         std::cout << "Generation " << i << std::endl;
-        dnas = evolution(dnas);
+
+        evolution(*dnasPtr, *nextGenPtr, matingPool);
+        std::swap(nextGenPtr, dnasPtr);
     }
 
+    // Evaluate the last generation
     for(auto & dna: dnas)
     {
         dna.computeFitness();
     }
 
-    // Reverse sort: greatest fitness to lowest
     std::sort(std::begin(dnas), std::end(dnas),
         [](DNAType const & lhs, DNAType const & rhs)
         {
