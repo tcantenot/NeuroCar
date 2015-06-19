@@ -63,10 +63,11 @@ else()
     add_definitions(-DCAR_PHYSICS_GRAPHIC_MODE_SFML=0)
 endif()
 
-
 ################################################################################
 #                             COMPILATION FLAGS                                #
 ################################################################################
+
+#set(CMAKE_CXX_COMPILER /usr/bin/mpicxx.mpich2)
 
 if(NEURO_CAR_COMPILER_GCC OR NEURO_CAR_COMPILER_CLANG)
 
@@ -205,6 +206,7 @@ set(NEURO_CAR_HEADERS
     ${NEURO_CAR_INCLUDE_DIR}/evolution.hpp
     ${NEURO_CAR_INCLUDE_DIR}/evolution.inl
     ${NEURO_CAR_INCLUDE_DIR}/evolving_string.hpp
+    ${NEURO_CAR_INCLUDE_DIR}/mpi.hpp
 )
 
 # Source files

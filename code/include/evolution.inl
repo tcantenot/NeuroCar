@@ -1,7 +1,10 @@
 #include "evolution.hpp"
 
+#include <omp.h>
+
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 
 #include <iostream>
 
@@ -28,29 +31,23 @@ using MatingPool = std::vector<RankedDNA<DNAType>>;
 template <typename DNAType>
 void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType> & matingPool)
 {
-    static_assert(
-        std::is_default_constructible<DNAType>::value,
-        "DNAType must be default constructible"
-    );
-
-    static_assert(
-        std::is_base_of<DNA<typename DNAType::Subject, DNAType>, DNAType>::value,
-        "DNAType must inherits from DNA<T, DNAType>"
-    );
-
     assert(dnas.size() > 0);
     assert(nextGen.size() == dnas.size());
 
-    // Train
-    // TODO: do this in parallel
-    for(auto & dna: dnas)
-    {
-        dna.computeFitness();
-    }
+    using Fitness = typename DNAType::Fitness;
+    using MutationRate = typename DNAType::MutationRate;
+
 
     // Compute the fitness of the dnas
-
-    using Fitness = typename DNAType::Fitness;
+    std::size_t const popSize = dnas.size();
+    #pragma omp parallel
+    {
+        #pragma omp for schedule(dynamic, 1)
+        for(auto i = 0u; i < popSize; ++i)
+        {
+            dnas[i].computeFitness();
+        }
+    }
 
     // TODO: do this in parallel
     // -> map reduce
@@ -60,17 +57,22 @@ void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType
         cumulativeFitness += dna.getFitness();
     }
 
-    Fitness avgFitness = cumulativeFitness / static_cast<Fitness>(dnas.size());
-
     // TODO: stop on fitness threshold?
+    //Fitness avgFitness = cumulativeFitness / static_cast<Fitness>(dnas.size());
     //std::cout << "Average fitness = " << avgFitness << std::endl;
 
 
     // Create the mating pool
-    for(auto i = 0u; i < dnas.size(); ++i)
+    #pragma omp parallel
     {
-        auto const & dna = dnas[i];
-        matingPool[i] = RankedDNA<DNAType>(std::cref(dna), dna.getFitness() / cumulativeFitness);
+        #pragma omp for schedule(dynamic, 1)
+        for(auto i = 0u; i < dnas.size(); ++i)
+        {
+            auto const & dna = dnas[i];
+            matingPool[i] = RankedDNA<DNAType>(
+                std::cref(dna), dna.getFitness() / cumulativeFitness
+            );
+        }
     }
 
     // Reverse sort: greatest relative fitness to lowest
@@ -81,6 +83,8 @@ void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType
         }
     );
 
+    // TODO: do this in parallel
+    // -> map reduce
     Fitness cumulativeScore = 0.0;
     for(auto & dna: matingPool)
     {
@@ -89,41 +93,45 @@ void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType
     }
 
     // Reproduce
-
-    static auto const selectParent = [](MatingPool<DNAType> & matingPool) -> DNAType const &
-    {
-        static std::random_device rd;
-        static std::mt19937 rng(rd());
-        static std::uniform_real_distribution<double> random(0.0, 1.0);
-
-        Fitness r = random(rng);
-        for(auto i = 0u; i < matingPool.size()-1; ++i)
-        {
-            if(matingPool[i].score > r)
-            {
-                return matingPool[i].dna;
-            }
-        }
-
-        return matingPool[matingPool.size()-1].dna;
-    };
-
-    using MutationRate = typename DNAType::MutationRate;
-
     MutationRate const mutationRate = 0.01;
-
-    for(auto i = 0u; i < dnas.size(); ++i)
+    #pragma omp parallel
     {
-        DNAType const & parentA = selectParent(matingPool);
-        DNAType const & parentB = selectParent(matingPool);
+        // Create a random generator per thread
+        std::mt19937_64 rng((omp_get_thread_num() + 1) * static_cast<uint64_t>(
+            std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())
+        ));
+        std::uniform_real_distribution<double> random(0.0, 1.0);
 
-        //TODO:
-        // - When to remove the T entity?
-        auto child = parentA.crossover(parentB);
-        DNAType childDNA(child);
-        childDNA.mutate(mutationRate);
+        // Parent selection lambda
+        auto const selectParent =
+        [&rng, &random](MatingPool<DNAType> & matingPool) -> DNAType const &
+        {
+            Fitness r = random(rng);
+            for(auto i = 0u; i < matingPool.size()-1; ++i)
+            {
+                if(matingPool[i].score > r)
+                {
+                    return matingPool[i].dna;
+                }
+            }
 
-        nextGen[i] = std::move(childDNA);
+            return matingPool[matingPool.size()-1].dna;
+        };
+
+        // Create next generation
+        #pragma omp for schedule(dynamic, 1)
+        for(auto i = 0u; i < dnas.size(); ++i)
+        {
+            DNAType const & parentA = selectParent(matingPool);
+            DNAType const & parentB = selectParent(matingPool);
+
+            //TODO:
+            // - When to remove the T entity?
+            DNAType childDNA(parentA.crossover(parentB));
+            childDNA.mutate(mutationRate);
+
+            nextGen[i] = std::move(childDNA);
+        }
     }
 }
 
@@ -132,6 +140,16 @@ void evolution(DNAs<DNAType> & dnas, DNAs<DNAType> & nextGen, MatingPool<DNAType
 template <typename DNAType, typename T>
 DNAs<DNAType> evolve(Population<T> const & population, std::size_t ngenerations)
 {
+    static_assert(
+        std::is_base_of<DNA<T, DNAType>, DNAType>::value,
+        "DNAType must inherit from DNA<T, DNAType>"
+    );
+
+    static_assert(
+        std::is_default_constructible<DNAType>::value,
+        "DNAType must be default constructible"
+    );
+
     DNAs<DNAType> dnas;
     dnas.reserve(population.size());
 
@@ -168,9 +186,14 @@ DNAs<DNAType> evolve(Population<T> const & population, std::size_t ngenerations)
     }
 
     // Evaluate the last generation
-    for(auto & dna: nextGen)
+    std::size_t const popSize = nextGen.size();
+    #pragma omp parallel
     {
-        dna.computeFitness();
+        #pragma omp for schedule(dynamic, 1)
+        for(auto i = 0u; i < popSize; ++i)
+        {
+            nextGen[i].computeFitness();
+        }
     }
 
     std::sort(std::begin(nextGen), std::end(nextGen),

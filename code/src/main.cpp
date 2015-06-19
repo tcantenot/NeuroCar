@@ -1,9 +1,26 @@
+#include <cstdint>
+
+#include <mpi.hpp>
+
 #include <car.hpp>
 #include <renderer.hpp>
 #include <staticbox.hpp>
 #include <world.hpp>
 
 #include <evolving_string.hpp>
+
+void carTest();
+
+int main(int argc, char ** argv)
+{
+    // Initialize MPI
+    //MPIInitializer(argc, argv);
+
+    //carTest();
+    NeuroCar::stringEvolution();
+
+    return 0;
+}
 
 void carTest()
 {
@@ -52,12 +69,4 @@ void carTest()
     w.addDrawable(car);
 
     w.run();
-}
-
-
-int main()
-{
-    //carTest();
-    NeuroCar::evolutionTest();
-    return 0;
 }

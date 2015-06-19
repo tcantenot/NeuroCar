@@ -66,7 +66,7 @@ class Random
     public:
 };
 
-void evolutionTest();
+void stringEvolution();
 
 }
 

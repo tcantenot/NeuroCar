@@ -126,7 +126,7 @@ std::string EvolvingStringDNA::RandomString(std::size_t length)
     return str;
 }
 
-void evolutionTest()
+void stringEvolution()
 {
     Population<EvolvingString> strings;
     for(auto i = 0; i < 200; ++i)
