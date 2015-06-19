@@ -66,7 +66,7 @@ class Random
     public:
 };
 
-void stringEvolution();
+void stringEvolution(proc_info_t info);
 
 }
 

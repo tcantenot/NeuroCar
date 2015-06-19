@@ -126,7 +126,7 @@ std::string EvolvingStringDNA::RandomString(std::size_t length)
     return str;
 }
 
-void stringEvolution()
+void stringEvolution(proc_info_t info)
 {
     Population<EvolvingString> strings;
     for(auto i = 0; i < 200; ++i)
@@ -134,7 +134,11 @@ void stringEvolution()
         strings.push_back(new EvolvingString("To be or not to be"));
     }
 
-    DNAs<EvolvingStringDNA> dnas = evolve<EvolvingStringDNA>(strings, 10000);
+    EvolutionParams params;
+    params.mutationRate = 0.01;
+    params.procInfo = std::move(info);
+
+    DNAs<EvolvingStringDNA> dnas = evolve<EvolvingStringDNA>(strings, 100, params);
 
     for(auto & dna: dnas)
     {

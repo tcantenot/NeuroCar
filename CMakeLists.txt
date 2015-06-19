@@ -67,7 +67,7 @@ endif()
 #                             COMPILATION FLAGS                                #
 ################################################################################
 
-#set(CMAKE_CXX_COMPILER /usr/bin/mpicxx.mpich2)
+set(CMAKE_CXX_COMPILER /usr/bin/mpicxx.mpich2)
 
 if(NEURO_CAR_COMPILER_GCC OR NEURO_CAR_COMPILER_CLANG)
 

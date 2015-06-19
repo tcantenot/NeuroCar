@@ -14,10 +14,10 @@ void carTest();
 int main(int argc, char ** argv)
 {
     // Initialize MPI
-    //MPIInitializer(argc, argv);
+    MPIInitializer mpi(argc, argv);
 
     //carTest();
-    NeuroCar::stringEvolution();
+    NeuroCar::stringEvolution(mpi.getProcInfo());
 
     return 0;
 }
