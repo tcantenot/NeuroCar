@@ -1,5 +1,7 @@
 #include <cstdint>
 
+#include <omp.h>
+
 #include <car.hpp>
 #include <renderer.hpp>
 #include <staticbox.hpp>
@@ -9,11 +11,11 @@
 
 void carTest();
 
-int main()
+int main(int argc, char const ** argv)
 {
-    //carTest();
+    int32_t nthreads = argc > 1 ? std::atoi(argv[1]) : omp_get_max_threads();
+    omp_set_num_threads(nthreads);
     NeuroCar::stringEvolution();
-
     return 0;
 }
 

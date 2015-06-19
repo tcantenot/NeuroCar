@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#define OPENMP_MAP_REDUCE 1
+
 namespace NeuroCar {
 
 namespace {
@@ -42,9 +44,9 @@ void evolution(
     using Fitness = typename DNAType::Fitness;
     using MutationRate = typename DNAType::MutationRate;
 
+    std::size_t const popSize = dnas.size();
 
     // Compute the fitness of the dnas
-    std::size_t const popSize = dnas.size();
     #pragma omp parallel
     {
         #pragma omp for schedule(dynamic, 1)
@@ -54,13 +56,31 @@ void evolution(
         }
     }
 
-    // TODO: do this in parallel
-    // -> map reduce
+    #if OPENMP_MAP_REDUCE
+    std::vector<Fitness> accumulator(omp_get_max_threads(), 0.0);
+    #pragma omp parallel
+    {
+        auto id = omp_get_thread_num();
+        #pragma omp for schedule(static)
+        for(auto i = 0u; i < popSize; ++i)
+        {
+            accumulator[id] += dnas[i].getFitness();
+        }
+    }
+
+    Fitness cumulativeFitness = 0.0;
+    for(auto i = 0u; i < accumulator.size(); ++i)
+    {
+        cumulativeFitness += accumulator[i];
+    }
+    #else
     Fitness cumulativeFitness = 0.0;
     for(auto const & dna: dnas)
     {
         cumulativeFitness += dna.getFitness();
     }
+    #endif
+
 
     // TODO: stop on fitness threshold?
     //Fitness avgFitness = cumulativeFitness / static_cast<Fitness>(dnas.size());
@@ -88,8 +108,7 @@ void evolution(
         }
     );
 
-    // TODO: do this in parallel
-    // -> map reduce with openmp (not mpi) (allocate std::vector(omp_get_num_thread()) as accu
+    // Compute score of dnas
     Fitness cumulativeScore = 0.0;
     for(auto & dna: matingPool)
     {
