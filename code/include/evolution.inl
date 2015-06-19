@@ -159,30 +159,28 @@ DNAs<DNAType> evolve(Population<T> const & population, std::size_t ngenerations)
     nextGen.resize(population.size());
 
     // Evolve
-    DNAs<DNAType> * dnasPtr    = &dnas;
-    DNAs<DNAType> * nextGenPtr = &nextGen;
     for(auto i = 0u; i < ngenerations; ++i)
     {
         std::cout << "Generation " << i << std::endl;
 
-        evolution(*dnasPtr, *nextGenPtr, matingPool);
-        std::swap(nextGenPtr, dnasPtr);
+        evolution(dnas, nextGen, matingPool);
+        std::swap(nextGen, dnas);
     }
 
     // Evaluate the last generation
-    for(auto & dna: dnas)
+    for(auto & dna: nextGen)
     {
         dna.computeFitness();
     }
 
-    std::sort(std::begin(dnas), std::end(dnas),
+    std::sort(std::begin(nextGen), std::end(nextGen),
         [](DNAType const & lhs, DNAType const & rhs)
         {
             return lhs.getFitness() < rhs.getFitness();
         }
     );
 
-    return dnas;
+    return nextGen;
 }
 
 }
