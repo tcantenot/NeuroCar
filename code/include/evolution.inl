@@ -81,11 +81,9 @@ void evolution(
     }
     #endif
 
-
     // TODO: stop on fitness threshold?
     //Fitness avgFitness = cumulativeFitness / static_cast<Fitness>(dnas.size());
     //std::cout << "Average fitness = " << avgFitness << std::endl;
-
 
     // Create the mating pool
     #pragma omp parallel

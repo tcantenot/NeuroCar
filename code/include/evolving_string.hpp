@@ -61,11 +61,6 @@ class EvolvingStringDNA : public DNA<EvolvingString, EvolvingStringDNA>
 
 };
 
-class Random
-{
-    public:
-};
-
 void stringEvolution();
 
 }

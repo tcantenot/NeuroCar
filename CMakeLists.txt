@@ -204,12 +204,14 @@ set(NEURO_CAR_HEADERS
     ${NEURO_CAR_INCLUDE_DIR}/evolution.hpp
     ${NEURO_CAR_INCLUDE_DIR}/evolution.inl
     ${NEURO_CAR_INCLUDE_DIR}/evolving_string.hpp
+    ${NEURO_CAR_INCLUDE_DIR}/self_driving_car.hpp
 )
 
 # Source files
 set(NEURO_CAR_SOURCES
     ${NEURO_CAR_SOURCE_DIR}/neuro_controller.cpp
     ${NEURO_CAR_SOURCE_DIR}/evolving_string.cpp
+    ${NEURO_CAR_SOURCE_DIR}/self_driving_car.cpp
 )
 
 # Static library
