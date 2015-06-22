@@ -58,11 +58,13 @@ class SelfDrivingCarDNA : public DNA<SelfDrivingCar, SelfDrivingCarDNA>
 {
     public:
         SelfDrivingCarDNA(SelfDrivingCar * subject = nullptr);
+        SelfDrivingCarDNA(std::unique_ptr<SelfDrivingCar> && subject);
 
         virtual void randomize() override;
         virtual Fitness computeFitness() override;
         virtual Fitness getFitness() const override;
-        virtual SelfDrivingCar * crossover(SelfDrivingCarDNA const & partner) const override;
+        virtual std::unique_ptr<SelfDrivingCar> crossover(
+            SelfDrivingCarDNA const & partner) const override;
         virtual void mutate(MutationRate mutationRate) override;
 
     private:
