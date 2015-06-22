@@ -8,6 +8,7 @@
 #include <world.hpp>
 
 #include <evolving_string.hpp>
+#include <neuro_controller.hpp>
 
 void carTest();
 
@@ -15,7 +16,8 @@ int main(int argc, char const ** argv)
 {
     int32_t nthreads = argc > 1 ? std::atoi(argv[1]) : omp_get_max_threads();
     omp_set_num_threads(nthreads);
-    NeuroCar::stringEvolution();
+    //NeuroCar::stringEvolution();
+    carTest();
     return 0;
 }
 
@@ -61,9 +63,12 @@ void carTest()
     };
 
     float32 carAngle = 90.0;
-    Car* car = new Car(b2Vec2(50, 10), toRadian(carAngle), 2, 3, 8.0, angles);
 
-    w.addDrawable(car);
+    NeuroCar::NeuroController controller;
+
+    Car* car = new Car(b2Vec2(50, 10), toRadian(carAngle), 2, 3, 18.0, angles, &controller);
+
+    w.addRequiredDrawable(car);
 
     w.run();
 }

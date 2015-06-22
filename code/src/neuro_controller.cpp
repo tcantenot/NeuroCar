@@ -1,4 +1,6 @@
 #include <neuro_controller.hpp>
+#include <car.hpp>
+#include <functions.hpp>
 
 namespace NeuroCar {
 
@@ -6,7 +8,18 @@ NeuroController::NeuroController():
     Controller(),
     m_neuralNetwork()
 {
-
+    //Shape
+    NeuralNetwork::Shape shape;
+    shape.push_back(10);
+    shape.push_back(10);
+    shape.push_back(4);
+    m_neuralNetwork.setShape(shape);
+    m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
+    m_neuralNetwork.setActivationFuncPrime(NeuroEvolution::sigmoid_prime);
+    m_neuralNetwork.setMinStartWeight(-1.0);
+    m_neuralNetwork.setMaxStartWeight(1.0);
+    m_neuralNetwork.setSeed(time(NULL));
+    m_neuralNetwork.synthetize();
 }
 
 NeuroController::NeuroController(NeuralNetwork const & nn):
@@ -42,27 +55,23 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     Weights inputs;
 
-    (void) c;
+    std::vector<float32> dists = c->getDist();
 
-    // Create inputs from car state and sensors
-    #if 0
-    // Speed
-    // Direction
-    // Raycast
-    #endif
+    for (auto it = dists.begin(); it != dists.end();++it)
+    {
+        inputs.push_back(*it);
+    }
 
     // Compute next decision
     Weights outputs = m_neuralNetwork.compute(inputs);
 
     uint32_t flags = 0;
 
-    #if 0
-    float threshold = 0.9;
-    if(outputs[0] > threshold) flags |= Car::UP;
-    if(outputs[1] > threshold) flags |= Car::DOWN;
-    if(outputs[2] > threshold) flags |= Car::LEFT;
-    if(outputs[3] > threshold) flags |= Car::RIGHT;
-    #endif
+    float threshold = 0.5;
+    if(outputs[0] > threshold) flags |= Car::LEFT;
+    if(outputs[1] > threshold) flags |= Car::RIGHT;
+    if(outputs[2] > threshold) flags |= Car::FORWARD;
+    if(outputs[3] > threshold) flags |= Car::BACKWARD;
 
     return flags;
 }

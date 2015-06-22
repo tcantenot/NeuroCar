@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+#include <functional>
+
 #define OPENMP_MAP_REDUCE 1
 
 namespace NeuroCar {
