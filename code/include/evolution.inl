@@ -212,6 +212,7 @@ DNAs<DNAType> evolve(
     }
 
     // Evaluate the last generation
+    std::swap(nextGen, dnas);
     std::size_t const popSize = nextGen.size();
     #pragma omp parallel
     {

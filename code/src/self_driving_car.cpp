@@ -45,6 +45,13 @@ SelfDrivingCarDNA::SelfDrivingCarDNA(SelfDrivingCar * subject):
 
 }
 
+SelfDrivingCarDNA::SelfDrivingCarDNA(std::unique_ptr<SelfDrivingCar> && subject):
+    DNA(std::move(subject)),
+    m_fitness(0.0)
+{
+
+}
+
 void SelfDrivingCarDNA::randomize()
 {
     SelfDrivingCar * car = this->getSubject();
@@ -73,7 +80,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::getFitness() const
     return m_fitness;
 }
 
-SelfDrivingCar * SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
+std::unique_ptr<SelfDrivingCar> SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
 {
     using NeuralNetwork = SelfDrivingCar::NeuralNetwork;
 
@@ -81,7 +88,7 @@ SelfDrivingCar * SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner)
 
     //TODO: implement copy
     // and configure next generation car
-    SelfDrivingCar * child = new SelfDrivingCar(*m_subject);
+    std::unique_ptr<SelfDrivingCar> child(new SelfDrivingCar(*m_subject));
 
     //static std::random_device rd;
     //static std::default_random_engine rng(rd());
