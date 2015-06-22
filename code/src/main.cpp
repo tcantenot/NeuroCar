@@ -68,7 +68,7 @@ void carTest()
 
     Car* car = new Car(b2Vec2(50, 10), toRadian(carAngle), 2, 3, 18.0, angles, &controller);
 
-    w.addDrawable(car);
+    w.addRequiredDrawable(car);
 
     w.run();
 }
