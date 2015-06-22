@@ -14,8 +14,11 @@ NeuroController::NeuroController():
     shape.push_back(4);
     shape.push_back(4);
     m_neuralNetwork.setShape(shape);
-    //m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
-    //m_neuralNetwork.setActivationFuncPrime(NeuroEvolution::sigmoid_prime);
+    m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
+    m_neuralNetwork.setActivationFuncPrime(NeuroEvolution::sigmoid_prime);
+    m_neuralNetwork.setMinStartWeight(-1.0);
+    m_neuralNetwork.setMaxStartWeight(1.0);
+    m_neuralNetwork.setSeed(time(NULL));
     m_neuralNetwork.synthetize();
 }
 
