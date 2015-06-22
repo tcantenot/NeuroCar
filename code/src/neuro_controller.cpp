@@ -6,7 +6,13 @@ NeuroController::NeuroController():
     Controller(),
     m_neuralNetwork()
 {
-
+    //Shape
+    NeuralNetwork::Shape shape;
+    shape.push_back(1);
+    shape.push_back(4);
+    shape.push_back(4);
+    m_neuralNetwork.setShape(shape);
+    m_neuralNetwork.synthetize();
 }
 
 NeuroController::NeuroController(NeuralNetwork const & nn):
@@ -56,13 +62,11 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     uint32_t flags = 0;
 
-    #if 0
     float threshold = 0.9;
     if(outputs[0] > threshold) flags |= Car::UP;
     if(outputs[1] > threshold) flags |= Car::DOWN;
     if(outputs[2] > threshold) flags |= Car::LEFT;
     if(outputs[3] > threshold) flags |= Car::RIGHT;
-    #endif
 
     return flags;
 }
