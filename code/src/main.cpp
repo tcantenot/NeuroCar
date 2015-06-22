@@ -7,6 +7,8 @@
 #include <staticbox.hpp>
 #include <world.hpp>
 
+#include <memory>
+
 #include <evolving_string.hpp>
 #include <neuro_controller.hpp>
 
@@ -66,7 +68,7 @@ void carTest()
 
     NeuroCar::NeuroController controller;
 
-    Car* car = new Car(b2Vec2(50, 10), toRadian(carAngle), 2, 3, 18.0, angles, &controller);
+    std::shared_ptr<Car> car = std::make_shared<Car> (b2Vec2(50, 10), toRadian(carAngle), 2, 3, 18.0, angles, &controller);
 
     w.addRequiredDrawable(car);
 
