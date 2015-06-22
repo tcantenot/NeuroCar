@@ -1,3 +1,6 @@
+#ifndef NEURO_CAR_EVOLUTION_INL
+#define NEURO_CAR_EVOLUTION_INL
+
 #include "evolution.hpp"
 
 #include <omp.h>
@@ -40,6 +43,7 @@ void evolution(
 {
     assert(dnas.size() > 0);
     assert(nextGen.size() == dnas.size());
+    assert(params.elitism <= dnas.size());
 
     using Fitness = typename DNAType::Fitness;
     using MutationRate = typename DNAType::MutationRate;
@@ -80,10 +84,6 @@ void evolution(
         cumulativeFitness += dna.getFitness();
     }
     #endif
-
-    // TODO: stop on fitness threshold?
-    //Fitness avgFitness = cumulativeFitness / static_cast<Fitness>(dnas.size());
-    //std::cout << "Average fitness = " << avgFitness << std::endl;
 
     // Create the mating pool
     #pragma omp parallel
@@ -140,15 +140,21 @@ void evolution(
             return matingPool[matingPool.size()-1].dna;
         };
 
+
+        // Elitism: keep the best individuals of the previous generation
+        #pragma omp for schedule(dynamic, 1)
+        for(auto i = 0u; i < params.elitism; ++i)
+        {
+            nextGen[i] = matingPool[i].dna;
+        }
+
         // Create next generation
         #pragma omp for schedule(dynamic, 1)
-        for(auto i = 0u; i < dnas.size(); ++i)
+        for(auto i = params.elitism; i < dnas.size(); ++i)
         {
             DNAType const & parentA = selectParent(matingPool);
             DNAType const & parentB = selectParent(matingPool);
 
-            //TODO:
-            // - When to remove the T entity?
             DNAType childDNA(parentA.crossover(parentB));
             childDNA.mutate(mutationRate);
 
@@ -234,3 +240,5 @@ DNAs<DNAType> evolve(
 }
 
 }
+
+#endif //NEURO_CAR_EVOLUTION_INL

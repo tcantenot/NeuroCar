@@ -22,20 +22,12 @@ static const char ALPHABET[] =
 
 }
 
-EvolvingStringDNA::EvolvingStringDNA(EvolvingString * subject):
+EvolvingStringDNA::EvolvingStringDNA(Subject subject):
     DNA(subject),
     m_fitness(0.0)
 {
 
 }
-
-EvolvingStringDNA::EvolvingStringDNA(std::unique_ptr<EvolvingString> && subject):
-    DNA(std::move(subject)),
-    m_fitness(0.0)
-{
-
-}
-
 
 void EvolvingStringDNA::randomize()
 {
@@ -70,11 +62,11 @@ EvolvingStringDNA::Fitness EvolvingStringDNA::getFitness() const
     return m_fitness;
 }
 
-std::unique_ptr<EvolvingString> EvolvingStringDNA::crossover(EvolvingStringDNA const & partner) const
+EvolvingStringDNA::Subject EvolvingStringDNA::crossover(EvolvingStringDNA const & partner) const
 {
     assert(m_subject);
 
-    std::unique_ptr<EvolvingString> child(new EvolvingString(*m_subject));
+    Subject child = Subject(new EvolvingString(*m_subject));
 
     std::size_t length = m_subject->getGenes().size();
 
@@ -137,15 +129,16 @@ std::string EvolvingStringDNA::RandomString(std::size_t length)
 void stringEvolution()
 {
     Population<EvolvingString> strings;
-    for(auto i = 0; i < 20; ++i)
+    for(auto i = 0; i < 200; ++i)
     {
-        strings.push_back(new EvolvingString("To be or not to be"));
+        strings.push_back(createIndividual<EvolvingString>("To be or not to be"));
     }
 
     EvolutionParams params;
     params.mutationRate = 0.02;
+    params.elitism = 2;
 
-    DNAs<EvolvingStringDNA> dnas = evolve<EvolvingStringDNA>(strings, 100, params);
+    DNAs<EvolvingStringDNA> dnas = evolve<EvolvingStringDNA>(strings, 10000, params);
 
     for(auto & dna: dnas)
     {

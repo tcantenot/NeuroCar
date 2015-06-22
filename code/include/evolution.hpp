@@ -10,7 +10,7 @@
 namespace NeuroCar {
 
 template <typename T>
-using Population = std::vector<T*>;
+using Population = std::vector<Individual<T>>;
 
 template <typename DNAType>
 using DNAs = std::vector<DNAType>;
@@ -18,7 +18,10 @@ using DNAs = std::vector<DNAType>;
 struct EvolutionParams
 {
     using MutationRate = double;
+    using Elitism = uint32_t;
+
     MutationRate mutationRate = 0.01;
+    Elitism elitism = 1;
 };
 
 template <typename DNAType, typename T>

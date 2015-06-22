@@ -38,15 +38,8 @@ SelfDrivingCar::NeuralNetwork const & SelfDrivingCar::getNeuralNetwork() const
     return m_neuroController.getNeuralNetwork();
 }
 
-SelfDrivingCarDNA::SelfDrivingCarDNA(SelfDrivingCar * subject):
+SelfDrivingCarDNA::SelfDrivingCarDNA(Subject subject):
     DNA(subject),
-    m_fitness(0.0)
-{
-
-}
-
-SelfDrivingCarDNA::SelfDrivingCarDNA(std::unique_ptr<SelfDrivingCar> && subject):
-    DNA(std::move(subject)),
     m_fitness(0.0)
 {
 
@@ -80,30 +73,25 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::getFitness() const
     return m_fitness;
 }
 
-std::unique_ptr<SelfDrivingCar> SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
+SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
 {
     using NeuralNetwork = SelfDrivingCar::NeuralNetwork;
 
     assert(m_subject);
 
-    //TODO: implement copy
-    // and configure next generation car
-    std::unique_ptr<SelfDrivingCar> child(new SelfDrivingCar(*m_subject));
+    Subject child(m_subject);
 
-    //static std::random_device rd;
-    //static std::default_random_engine rng(rd());
-    //std::uniform_int_distribution<> random(0, length-1);
-
-    //uint32_t midpoint = random(rng);
+    static std::random_device rd;
+    static std::default_random_engine rng(rd());
+    std::uniform_real_distribution<double> random(0, 1.0);
 
     NeuralNetwork const & parentAGenes = m_subject->getNeuralNetwork();
     NeuralNetwork const & parentBGenes = partner.getSubject()->getNeuralNetwork();
 
-    auto const selectParent = [&parentAGenes, &parentBGenes]()
+    auto const selectParent = [&parentAGenes, &parentBGenes](float r)
         -> NeuralNetwork const &
     {
-        //TODO
-        return parentAGenes;
+        return r < 0.5 ? parentAGenes : parentBGenes;
     };
 
     auto & childGenes = child->getNeuralNetwork();
@@ -119,11 +107,11 @@ std::unique_ptr<SelfDrivingCar> SelfDrivingCarDNA::crossover(SelfDrivingCarDNA c
         {
             for(auto j = 0u; j < J; ++j)
             {
-                NeuralNetwork const & nn = selectParent();
+                NeuralNetwork const & nn = selectParent(random(rng));
                 childGenes.setWeight(l, i, j, nn.getWeight(l, i, j));
             }
 
-            NeuralNetwork const & nn = selectParent();
+            NeuralNetwork const & nn = selectParent(random(rng));
             childGenes.setBias(l, i, nn.getBias(l, i));
         }
     }
