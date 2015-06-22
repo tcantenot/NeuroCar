@@ -1,4 +1,6 @@
 #include <neuro_controller.hpp>
+#include <car.hpp>
+#include <functions.hpp>
 
 namespace NeuroCar {
 
@@ -12,6 +14,8 @@ NeuroController::NeuroController():
     shape.push_back(4);
     shape.push_back(4);
     m_neuralNetwork.setShape(shape);
+    //m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
+    //m_neuralNetwork.setActivationFuncPrime(NeuroEvolution::sigmoid_prime);
     m_neuralNetwork.synthetize();
 }
 
@@ -48,6 +52,9 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     Weights inputs;
 
+    int posX = c->getPos().x;
+    inputs.push_back(posX);
+
     (void) c;
 
     // Create inputs from car state and sensors
@@ -62,11 +69,11 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     uint32_t flags = 0;
 
-    float threshold = 0.9;
-    if(outputs[0] > threshold) flags |= Car::UP;
-    if(outputs[1] > threshold) flags |= Car::DOWN;
-    if(outputs[2] > threshold) flags |= Car::LEFT;
-    if(outputs[3] > threshold) flags |= Car::RIGHT;
+    float threshold = 0.5;
+    if(outputs[0] > threshold) flags |= Car::LEFT;
+    if(outputs[1] > threshold) flags |= Car::RIGHT;
+    if(outputs[2] > threshold) flags |= Car::FORWARD;
+    if(outputs[3] > threshold) flags |= Car::BACKWARD;
 
     return flags;
 }
