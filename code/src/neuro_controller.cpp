@@ -10,8 +10,8 @@ NeuroController::NeuroController():
 {
     //Shape
     NeuralNetwork::Shape shape;
-    shape.push_back(1);
-    shape.push_back(4);
+    shape.push_back(10);
+    shape.push_back(10);
     shape.push_back(4);
     m_neuralNetwork.setShape(shape);
     m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
@@ -55,17 +55,12 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     Weights inputs;
 
-    int posX = c->getPos().x;
-    inputs.push_back(posX);
+    std::vector<float32> dists = c->getDist();
 
-    (void) c;
-
-    // Create inputs from car state and sensors
-    #if 0
-    // Speed
-    // Direction
-    // Raycast
-    #endif
+    for (auto it = dists.begin(); it != dists.end();++it)
+    {
+        inputs.push_back(*it);
+    }
 
     // Compute next decision
     Weights outputs = m_neuralNetwork.compute(inputs);
