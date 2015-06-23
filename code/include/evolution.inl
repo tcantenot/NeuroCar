@@ -3,17 +3,16 @@
 
 #include "evolution.hpp"
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-
+#include <functional>
 #include <iostream>
 
-#include <functional>
-
-#define OPENMP_MAP_REDUCE 1
 
 namespace NeuroCar {
 
@@ -53,51 +52,27 @@ void evolution(
     std::size_t const popSize = dnas.size();
 
     // Compute the fitness of the dnas
-    #pragma omp parallel
+    #pragma omp parallel for schedule(dynamic, 1)
+    for(auto i = 0u; i < popSize; ++i)
     {
-        #pragma omp for schedule(dynamic, 1)
-        for(auto i = 0u; i < popSize; ++i)
-        {
-            dnas[i].computeFitness();
-        }
-    }
-
-    #if OPENMP_MAP_REDUCE
-    std::vector<Fitness> accumulator(omp_get_max_threads(), 0.0);
-    #pragma omp parallel
-    {
-        auto id = omp_get_thread_num();
-        #pragma omp for schedule(static)
-        for(auto i = 0u; i < popSize; ++i)
-        {
-            accumulator[id] += dnas[i].getFitness();
-        }
+        dnas[i].computeFitness();
     }
 
     Fitness cumulativeFitness = 0.0;
-    for(auto i = 0u; i < accumulator.size(); ++i)
+    #pragma omp parallel for reduction(+:cumulativeFitness)
+    for(auto i = 0u; i < popSize; ++i)
     {
-        cumulativeFitness += accumulator[i];
+        cumulativeFitness += dnas[i].getFitness();
     }
-    #else
-    Fitness cumulativeFitness = 0.0;
-    for(auto const & dna: dnas)
-    {
-        cumulativeFitness += dna.getFitness();
-    }
-    #endif
 
     // Create the mating pool
-    #pragma omp parallel
+    #pragma omp parallel for schedule(dynamic, 1)
+    for(auto i = 0u; i < dnas.size(); ++i)
     {
-        #pragma omp for schedule(dynamic, 1)
-        for(auto i = 0u; i < dnas.size(); ++i)
-        {
-            auto const & dna = dnas[i];
-            matingPool[i] = RankedDNA<DNAType>(
-                std::cref(dna), dna.getFitness() / cumulativeFitness
-            );
-        }
+        auto const & dna = dnas[i];
+        matingPool[i] = RankedDNA<DNAType>(
+            std::cref(dna), dna.getFitness() / cumulativeFitness
+        );
     }
 
     // Reverse sort: greatest relative fitness to lowest
@@ -121,7 +96,14 @@ void evolution(
     #pragma omp parallel
     {
         // Create a random generator per thread
-        std::mt19937_64 rng((omp_get_thread_num() + 1) * static_cast<uint64_t>(
+
+        #ifdef _OPENMP
+        std::size_t threadNum = omp_get_thread_num();
+        #else
+        std::size_t threadNum = 0;
+        #endif
+
+        std::mt19937_64 rng((threadNum + 1) * static_cast<uint64_t>(
             std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())
         ));
         std::uniform_real_distribution<double> random(0.0, 1.0);
@@ -222,13 +204,10 @@ DNAs<DNAType> evolve(
     // Evaluate the last generation
     std::swap(nextGen, dnas);
     std::size_t const popSize = nextGen.size();
-    #pragma omp parallel
+    #pragma omp parallel for schedule(dynamic, 1)
+    for(auto i = 0u; i < popSize; ++i)
     {
-        #pragma omp for schedule(dynamic, 1)
-        for(auto i = 0u; i < popSize; ++i)
-        {
-            nextGen[i].computeFitness();
-        }
+        nextGen[i].computeFitness();
     }
 
     std::sort(std::begin(nextGen), std::end(nextGen),
