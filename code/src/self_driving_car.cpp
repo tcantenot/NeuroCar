@@ -3,6 +3,8 @@
 
 #include <random>
 
+#include <iostream>
+
 namespace NeuroCar {
 
 SelfDrivingCar::SelfDrivingCar():
@@ -92,6 +94,7 @@ void SelfDrivingCarDNA::randomize()
 
 SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 {
+    std::cout << "here" << std::endl;
     Fitness fitness = 0.0;
 
     std::shared_ptr<Car> car = this->getSubject()->getCar();
@@ -122,6 +125,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
         #else
         w = new World(8, 3);
         #endif
+        w->addBorders(worldWidth, worldHeight);
         w->randomize(worldWidth, worldHeight, 15, ++seed);
     }
 
@@ -139,6 +143,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 
     m_fitness = fitness;
 
+    std::cout << "there" << std::endl;
     return fitness;
 }
 

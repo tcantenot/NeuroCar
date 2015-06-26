@@ -45,15 +45,20 @@ void carEvolution()
 
     float32 carAngle = 90.0;
 
+    b2Vec2 destination(200, 200);
+    uint32_t seed = 1;
+
     for(auto i = 0; i < 2; ++i)
     {
         // Create car
-        std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(50, 10), toRadian(carAngle), 2, 3, 18.0, angles);
+        std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(10, 10), toRadian(carAngle), 2, 3, 18.0, angles);
 
 
         NeuroCar::Individual<NeuroCar::SelfDrivingCar> sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
 
         sdCar->setCar(car);
+        sdCar->setDestination(destination);
+        sdCar->setWorldSeed(seed);
 
         cars.push_back(sdCar);
     }
