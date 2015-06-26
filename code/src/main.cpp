@@ -67,7 +67,7 @@ void carEvolution()
     params.mutationRate = 0.02;
     params.elitism = 2;
 
-    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 10000, params);
+    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 100, params);
 
     /*for(auto & dna: dnas)
     {
