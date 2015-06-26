@@ -1,4 +1,5 @@
 #include <self_driving_car.hpp>
+#include <renderer.hpp>
 
 #include <random>
 
@@ -7,13 +8,6 @@ namespace NeuroCar {
 SelfDrivingCar::SelfDrivingCar():
     m_car(nullptr),
     m_neuroController()
-{
-    //m_car->setController(&m_neuroController);
-}
-
-SelfDrivingCar::SelfDrivingCar(NeuralNetwork const & nn):
-    m_car(nullptr),
-    m_neuroController(nn)
 {
     //m_car->setController(&m_neuroController);
 }
@@ -33,9 +27,52 @@ SelfDrivingCar::NeuralNetwork & SelfDrivingCar::getNeuralNetwork()
     return m_neuroController.getNeuralNetwork();
 }
 
+void SelfDrivingCar::setNeuroController(NeuroController nc)
+{
+    m_neuroController = nc;
+}
+
 SelfDrivingCar::NeuralNetwork const & SelfDrivingCar::getNeuralNetwork() const
 {
     return m_neuroController.getNeuralNetwork();
+}
+
+
+b2Vec2 const & SelfDrivingCar::getDestination() const
+{
+    return m_destination;
+}
+
+void SelfDrivingCar::setDestination(b2Vec2 destination)
+{
+    m_destination = destination;
+}
+
+void SelfDrivingCar::setWorldSeed(uint32_t seed)
+{
+    m_worldSeed = seed;
+}
+
+uint32_t SelfDrivingCar::getWorldSeed()
+{
+    return m_worldSeed;
+}
+
+
+std::shared_ptr<Car> & SelfDrivingCar::getCar()
+{
+    return m_car;
+}
+
+std::shared_ptr<Car> const & SelfDrivingCar::getCar() const
+{
+    return m_car;
+}
+
+void SelfDrivingCar::setCar(std::shared_ptr<Car> car)
+{
+    m_car = car;
+    m_car->setController(&m_neuroController);
 }
 
 SelfDrivingCarDNA::SelfDrivingCarDNA(Subject subject):
@@ -57,11 +94,48 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 {
     Fitness fitness = 0.0;
 
-    #if 0
-    SelfDrivingCar * car = this->getSubject();
-    vec3 pos = car->drive();
-    fitness = distance(pos, destination);
+    std::shared_ptr<Car> car = this->getSubject()->getCar();
+
+    // Create world
+    uint32_t worldWidth = 100;
+    uint32_t worldHeight = 80;
+
+    #if CAR_PHYSICS_GRAPHIC_MODE_SFML
+    Renderer r(8, worldWidth, worldHeight);
+    World *w = new World(8, 3, &r);
+    #else
+    World *w = new World(8, 3);
     #endif
+
+
+    w->addBorders(worldWidth, worldHeight);
+
+    uint32_t seed = this->getSubject()->getWorldSeed();
+
+    w->randomize(worldWidth, worldHeight, 15, seed);
+
+    while (w->willCollide(car))
+    {
+        delete w;
+        #if CAR_PHYSICS_GRAPHIC_MODE_SFML
+        w = new World(8, 3, &r);
+        #else
+        w = new World(8, 3);
+        #endif
+        w->randomize(worldWidth, worldHeight, 15, ++seed);
+    }
+
+    w->addRequiredDrawable(car);
+
+    w->run();
+
+    delete w;
+
+    b2Vec2 pos = car->getPos();
+
+    b2Vec2 destination = this->getSubject()->getDestination();
+
+    fitness = 1.0/(pow((pos.x - destination.x), 2) + pow((pos.y - destination.y), 2));
 
     m_fitness = fitness;
 
@@ -157,5 +231,6 @@ void SelfDrivingCarDNA::mutate(MutationRate mutationRate)
         }
     }
 }
+
 
 }

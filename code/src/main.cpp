@@ -7,40 +7,19 @@
 #include <staticbox.hpp>
 #include <world.hpp>
 
+#include <evolution.hpp>
+
 #include <memory>
 
-#include <evolving_string.hpp>
+//#include <evolving_string.hpp>
 #include <neuro_controller.hpp>
+#include <self_driving_car.hpp>
 
-void carTest();
+#include <iostream>
 
-int main(int argc, char const ** argv)
+void carEvolution()
 {
-    int32_t nthreads = argc > 1 ? std::atoi(argv[1]) : omp_get_max_threads();
-    omp_set_num_threads(nthreads);
-    //NeuroCar::stringEvolution();
-    carTest();
-    return 0;
-}
-
-void carTest()
-{
-    uint32_t worldWidth = 100;
-    uint32_t worldHeight = 80;
-
-    #if NEURO_CAR_GRAPHIC_MODE
-    Renderer r(8, worldWidth, worldHeight);
-    World w(8, 3, &r);
-    #else
-    World w(8, 3);
-    #endif
-
-    w.addBorders(worldWidth, worldHeight);
-
-    w.randomize(worldWidth, worldHeight, 15);
-
-
-    // a car
+    NeuroCar::Population<NeuroCar::SelfDrivingCar> cars;
 
     std::vector<float32> angles;
     //angles to ray cast
@@ -66,11 +45,37 @@ void carTest()
 
     float32 carAngle = 90.0;
 
-    NeuroCar::NeuroController controller;
+    for(auto i = 0; i < 2; ++i)
+    {
+        // Create car
+        std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(50, 10), toRadian(carAngle), 2, 3, 18.0, angles);
 
-    std::shared_ptr<Car> car = std::make_shared<Car> (b2Vec2(50, 10), toRadian(carAngle), 2, 3, 18.0, angles, &controller);
 
-    w.addRequiredDrawable(car);
+        NeuroCar::Individual<NeuroCar::SelfDrivingCar> sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
 
-    w.run();
+        sdCar->setCar(car);
+
+        cars.push_back(sdCar);
+    }
+
+    NeuroCar::EvolutionParams params;
+    params.mutationRate = 0.02;
+    params.elitism = 2;
+
+    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 10000, params);
+
+    /*for(auto & dna: dnas)
+    {
+        auto subject = dna.getSubject();
+        std::cout << subject->getGenes() << std::endl;
+    }*/
+
+}
+
+int main(int argc, char const ** argv)
+{
+    int32_t nthreads = argc > 1 ? std::atoi(argv[1]) : omp_get_max_threads();
+    omp_set_num_threads(nthreads);
+    carEvolution();
+    return 0;
 }

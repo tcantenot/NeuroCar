@@ -1,6 +1,8 @@
 #ifndef NEURO_CAR_SELF_DRIVING_CAR_HPP
 #define NEURO_CAR_SELF_DRIVING_CAR_HPP
 
+#include <memory>
+
 #include <car.hpp>
 #include <dna.hpp>
 #include <neuro_controller.hpp>
@@ -20,38 +22,35 @@ class SelfDrivingCar
     public:
         using NeuralNetwork = NeuroController::NeuralNetwork;
 
-#if 0
-        struct Params
-        {
-            double worldSeed;
-            vec3 destination;
-        };
-#endif
-
     public:
         SelfDrivingCar();
-
-        SelfDrivingCar(NeuralNetwork const & nn);
 
         NeuroController & getNeuroController();
         NeuroController const & getNeuroController() const;
 
+        void setNeuroController(NeuroController nc);
+
         NeuralNetwork & getNeuralNetwork();
         NeuralNetwork const & getNeuralNetwork() const;
 
-#if 0
-        vec3 drive();
-        vec3 const & getDestination() const;
-        void setDestination(vec3 destination);
-#endif
+        b2Vec2 const & getDestination() const;
+        void setDestination(b2Vec2 destination);
+
+        void setWorldSeed(uint32_t seed);
+        uint32_t getWorldSeed();
+
+        std::shared_ptr<Car> & getCar();
+        std::shared_ptr<Car> const & getCar() const ;
+
+        void setCar(std::shared_ptr<Car> car);
+
 
     private:
-        Car * m_car; // std::shared_ptr<Car> ? (shared between generation)
+        std::shared_ptr<Car> m_car;
         NeuroController m_neuroController;
 
-#if 0
-        vec3 m_destination;
-#endif
+        uint32_t m_worldSeed;
+        b2Vec2 m_destination;
 };
 
 class SelfDrivingCarDNA : public DNA<SelfDrivingCar, SelfDrivingCarDNA>
