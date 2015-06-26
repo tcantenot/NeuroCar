@@ -117,6 +117,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 
     w->randomize(worldWidth, worldHeight, 15, seed);
 
+#if 0
     while (w->willCollide(car))
     {
         delete w;
@@ -128,6 +129,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
         w->addBorders(worldWidth, worldHeight);
         w->randomize(worldWidth, worldHeight, 15, ++seed);
     }
+#endif
 
     w->addRequiredDrawable(car);
 
@@ -139,7 +141,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 
     b2Vec2 destination = this->getSubject()->getDestination();
 
-    fitness = 1.0/(pow((pos.x - destination.x), 2) + pow((pos.y - destination.y), 2));
+    fitness = 1.0/(std::pow((pos.x - destination.x), 2) + std::pow((pos.y - destination.y), 2));
 
     m_fitness = fitness;
 
@@ -158,7 +160,14 @@ SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const 
 
     assert(m_subject);
 
-    Subject child(m_subject);
+    //Subject child(m_subject);
+
+    Subject child = createIndividual<NeuroCar::SelfDrivingCar>();
+
+    Car * c = new Car(*m_subject->getCar());
+    std::shared_ptr<Car> car(c);
+    child->setCar(car);
+
 
     static std::random_device rd;
     static std::default_random_engine rng(rd());
