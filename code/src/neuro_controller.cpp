@@ -2,6 +2,7 @@
 #include <car.hpp>
 #include <functions.hpp>
 
+
 namespace NeuroCar {
 
 NeuroController::NeuroController():
@@ -18,8 +19,6 @@ NeuroController::NeuroController():
     m_neuralNetwork.setActivationFuncPrime(NeuroEvolution::sigmoid_prime);
     m_neuralNetwork.setMinStartWeight(-1.0);
     m_neuralNetwork.setMaxStartWeight(1.0);
-    m_neuralNetwork.setSeed(time(NULL));
-    m_neuralNetwork.synthetize();
 }
 
 NeuroController::NeuroController(NeuralNetwork const & nn):

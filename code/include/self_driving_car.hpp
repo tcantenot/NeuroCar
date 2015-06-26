@@ -58,7 +58,7 @@ class SelfDrivingCarDNA : public DNA<SelfDrivingCar, SelfDrivingCarDNA>
     public:
         SelfDrivingCarDNA(Subject subject = nullptr);
 
-        virtual void randomize() override;
+        virtual void randomize(std::size_t seed) override;
         virtual Fitness computeFitness() override;
         virtual Fitness getFitness() const override;
         virtual Subject crossover(SelfDrivingCarDNA const & partner) const override;

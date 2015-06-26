@@ -29,7 +29,7 @@ class DNA
         T const * getSubject() const;
         void setSubject(Subject subject);
 
-        virtual void randomize() = 0;
+        virtual void randomize(std::size_t seed) = 0;
         virtual Fitness computeFitness() = 0;
         virtual Fitness getFitness() const = 0;
         virtual Subject crossover(DNAType const & partner) const = 0;

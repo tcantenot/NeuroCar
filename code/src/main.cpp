@@ -16,6 +16,7 @@
 #include <self_driving_car.hpp>
 
 #include <iostream>
+#include <io_utils.hpp>
 
 void carEvolution()
 {
@@ -48,7 +49,7 @@ void carEvolution()
     b2Vec2 destination(200, 200);
     uint32_t seed = 1;
 
-    for(auto i = 0; i < 2; ++i)
+    for(auto i = 0; i < 10; ++i)
     {
         // Create car
         std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(10, 10), toRadian(carAngle), 2, 3, 18.0, angles);

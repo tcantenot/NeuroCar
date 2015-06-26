@@ -3,8 +3,6 @@
 
 #include <random>
 
-#include <iostream>
-
 namespace NeuroCar {
 
 SelfDrivingCar::SelfDrivingCar():
@@ -84,11 +82,12 @@ SelfDrivingCarDNA::SelfDrivingCarDNA(Subject subject):
 
 }
 
-void SelfDrivingCarDNA::randomize()
+void SelfDrivingCarDNA::randomize(std::size_t seed)
 {
     SelfDrivingCar * car = this->getSubject();
     NeuroController & nc = car->getNeuroController();
-    SelfDrivingCar::NeuralNetwork nn = nc.getNeuralNetwork();
+    SelfDrivingCar::NeuralNetwork & nn = nc.getNeuralNetwork();
+    nn.setSeed(seed);
     nn.synthetize();
 }
 
@@ -158,7 +157,7 @@ SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const 
 
     //Subject child(m_subject);
 
-    Subject child = createIndividual<NeuroCar::SelfDrivingCar>();
+    Subject child = createIndividual<NeuroCar::SelfDrivingCar>(*m_subject);
 
     Car * c = new Car(*m_subject->getCar());
     std::shared_ptr<Car> car(c);
@@ -182,21 +181,22 @@ SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const 
 
     // Generate new ADN by combining the parents' DNAs
     auto const & nnshape = parentAGenes.getShape();
-    for(auto l = 1u; l < nnshape.size(); ++l)
+    for(auto l = 0u; l < nnshape.size()-1; ++l)
     {
-        auto J = nnshape[l];
-        auto I = nnshape[l-1];
+        auto I = nnshape[l];
+        auto J = nnshape[l+1];
 
-        for(auto i = 0u; i < I; ++i)
+        for(auto j = 0u; j < J; ++j)
         {
-            for(auto j = 0u; j < J; ++j)
+            for(auto i = 0u; i < I; ++i)
             {
                 NeuralNetwork const & nn = selectParent(random(rng));
                 childGenes.setWeight(l, i, j, nn.getWeight(l, i, j));
             }
 
             NeuralNetwork const & nn = selectParent(random(rng));
-            childGenes.setBias(l, i, nn.getBias(l, i));
+            // j because the the weight are stored in transpose
+            childGenes.setBias(l, j, nn.getBias(l, j));
         }
     }
 
@@ -215,14 +215,14 @@ void SelfDrivingCarDNA::mutate(MutationRate mutationRate)
     auto & nn = car->getNeuralNetwork();
 
     auto const & nnshape = nn.getShape();
-    for(auto l = 1u; l < nnshape.size(); ++l)
+    for(auto l = 0u; l < nnshape.size()-1; ++l)
     {
-        auto J = nnshape[l];
-        auto I = nnshape[l-1];
+        auto I = nnshape[l];
+        auto J = nnshape[l+1];
 
-        for(auto i = 0u; i < I; ++i)
+        for(auto j = 0u; j < J; ++j)
         {
-            for(auto j = 0u; j < J; ++j)
+            for(auto i = 0u; i < I; ++i)
             {
                 MutationRate r = random(rng);
                 if(r < mutationRate)
@@ -235,8 +235,9 @@ void SelfDrivingCarDNA::mutate(MutationRate mutationRate)
             MutationRate r = random(rng);
             if(r < mutationRate)
             {
-                auto b = nn.getBias(l, i) * (r / mutationRate);
-                nn.setBias(l, i, b);
+                // j because the the weight are stored in transpose
+                auto b = nn.getBias(l, j) * (r / mutationRate);
+                nn.setBias(l, j, b);
             }
         }
     }

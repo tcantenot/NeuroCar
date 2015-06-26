@@ -174,7 +174,7 @@ DNAs<DNAType> evolve(
     {
         assert(population[i] != nullptr);
         DNAType dna(population[i]);
-        dna.randomize();
+        dna.randomize(i);
         dnas.emplace_back(std::move(dna));
     }
 
@@ -199,6 +199,16 @@ DNAs<DNAType> evolve(
 
         evolution(dnas, nextGen, matingPool, params);
         std::swap(nextGen, dnas);
+
+#if 1
+        typename DNA<T, DNAType>::Fitness maxFitness = 0.0;
+        for(auto & dna: dnas)
+        {
+            auto f = dna.getFitness();
+            maxFitness = std::max(f, maxFitness);
+        }
+        std::cout << "Max fitness: " << maxFitness << std::endl;
+#endif
     }
 
     // Evaluate the last generation

@@ -28,7 +28,7 @@ EvolvingStringDNA::EvolvingStringDNA(Subject subject):
 
 }
 
-void EvolvingStringDNA::randomize()
+void EvolvingStringDNA::randomize(std::size_t)
 {
     assert(m_subject);
     m_subject->setGenes(EvolvingStringDNA::RandomString(m_subject->getTarget().size()));
