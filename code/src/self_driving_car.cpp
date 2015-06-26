@@ -116,7 +116,6 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 
     w->randomize(worldWidth, worldHeight, 15, seed);
 
-#if 0
     while (w->willCollide(car))
     {
         delete w;
@@ -128,7 +127,6 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
         w->addBorders(worldWidth, worldHeight);
         w->randomize(worldWidth, worldHeight, 15, ++seed);
     }
-#endif
 
     w->addRequiredDrawable(car);
 
