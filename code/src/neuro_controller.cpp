@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+#include <iostream>
 namespace NeuroCar {
 
 NeuroController::NeuroController():
@@ -11,9 +12,9 @@ NeuroController::NeuroController():
 {
     //Shape
     NeuralNetwork::Shape shape;
-    shape.push_back(12);
-    shape.push_back(12);
-    shape.push_back(4);
+    shape.push_back(1);
+    shape.push_back(2);
+    shape.push_back(2);
     m_neuralNetwork.setShape(shape);
     m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
     m_neuralNetwork.setActivationFuncPrime(NeuroEvolution::sigmoid_prime);
@@ -62,10 +63,10 @@ uint32_t NeuroController::updateFlags(Car * c) const
     std::vector<float32> dists = c->getDist();
 
     // Adding raycast results as input
-    for (auto it = dists.begin(); it != dists.end();++it)
+    /*for (auto it = dists.begin(); it != dists.end();++it)
     {
         inputs.push_back(*it);
-    }
+    }*/
 
     // Adding angle to destination as input
     b2Vec2 carPos = c->getPos();
@@ -89,11 +90,11 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     angle += carAngle;
 
-    inputs.push_back(angle);
+    //inputs.push_back(angle);
 
     // Adding distance to destination as input
-    double dist = sqrt(pow((m_destination.x - carPos.x), 2) + pow((m_destination.y - carPos.y), 2));
-
+    double dist = sqrt(pow((m_destination.x - carPos.x), 2) + pow((m_destination.y - carPos.y), 2)) / sqrt(100*100 +80*80);
+    //std::cout << dist << std::endl;
     inputs.push_back(dist);
 
     // Compute next decision
@@ -102,10 +103,13 @@ uint32_t NeuroController::updateFlags(Car * c) const
     uint32_t flags = 0;
 
     float threshold = 0.5;
-    if(outputs[0] > threshold) flags |= Car::LEFT;
-    if(outputs[1] > threshold) flags |= Car::RIGHT;
-    if(outputs[2] > threshold) flags |= Car::FORWARD;
-    if(outputs[3] > threshold) flags |= Car::BACKWARD;
+    //std::cout << outputs[0] << std::endl;
+    //std::cout << outputs[1] << std::endl;
+
+    if(outputs[0] > threshold) flags |= Car::FORWARD;
+    if(outputs[1] > threshold) flags |= Car::BACKWARD;
+    //if(outputs[2] > threshold) flags |= Car::FORWARD;
+    //if(outputs[3] > threshold) flags |= Car::BACKWARD;
 
     return flags;
 }
