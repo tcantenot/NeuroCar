@@ -2,6 +2,7 @@
 #include <renderer.hpp>
 
 #include <random>
+#include <iostream>
 
 namespace NeuroCar {
 
@@ -138,7 +139,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 
     b2Vec2 destination = this->getSubject()->getDestination();
 
-    fitness = 1.0/(std::pow((pos.x - destination.x), 2) + std::pow((pos.y - destination.y), 2));
+    fitness = 1/sqrt(std::pow((pos.x - destination.x), 2) + std::pow((pos.y - destination.y), 2));
 
     m_fitness = fitness;
 
@@ -208,7 +209,8 @@ void SelfDrivingCarDNA::mutate(MutationRate mutationRate)
 {
     static std::random_device rd;
     static std::default_random_engine rng(rd());
-    std::uniform_real_distribution<MutationRate> random(0.00001, 1.0);
+    std::uniform_real_distribution<double> lottery(0.0, 1.0);
+    std::uniform_real_distribution<MutationRate> mutation(-1.0, 1.0);
 
     SelfDrivingCar * car = this->getSubject();
     assert(car);
@@ -225,19 +227,19 @@ void SelfDrivingCarDNA::mutate(MutationRate mutationRate)
         {
             for(auto i = 0u; i < I; ++i)
             {
-                MutationRate r = random(rng);
+                MutationRate r = lottery(rng);
                 if(r < mutationRate)
                 {
-                    auto w = nn.getWeight(l, i, j) * (r / mutationRate);
+                    auto w = nn.getWeight(l, i, j) + mutation(rng);
                     nn.setWeight(l, i, j, w);
                 }
             }
 
-            MutationRate r = random(rng);
+            MutationRate r = lottery(rng);
             if(r < mutationRate)
             {
                 // j because the the weight are stored in transpose
-                auto b = nn.getBias(l, j) * (r / mutationRate);
+                auto b = nn.getBias(l, j) + mutation(rng);
                 nn.setBias(l, j, b);
             }
         }
