@@ -46,10 +46,10 @@ void carEvolution()
 
     float32 carAngle = 0.0;
 
-    b2Vec2 destination(10, 45);
+    b2Vec2 destination(50, 40);
     uint32_t seed = 1;
 
-    for(auto i = 0; i < 5; ++i)
+    for(auto i = 0; i < 100; ++i)
     {
         // Create car
         std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(10, 10), toRadian(carAngle), 2, 3, 18.0, angles);
@@ -68,7 +68,7 @@ void carEvolution()
     params.mutationRate = 0.5;
     params.elitism = 1;
 
-    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 2, params);
+    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000, params);
 
     /*for(auto & dna: dnas)
     {

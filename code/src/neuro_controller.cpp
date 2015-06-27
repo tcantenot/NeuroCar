@@ -12,9 +12,9 @@ NeuroController::NeuroController():
 {
     //Shape
     NeuralNetwork::Shape shape;
-    shape.push_back(1);
     shape.push_back(2);
-    shape.push_back(2);
+    shape.push_back(4);
+    shape.push_back(4);
     m_neuralNetwork.setShape(shape);
     m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
     m_neuralNetwork.setActivationFuncPrime(NeuroEvolution::sigmoid_prime);
@@ -90,11 +90,11 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     angle += carAngle;
 
-    //inputs.push_back(angle);
+    inputs.push_back(angle);
 
     // Adding distance to destination as input
     double dist = sqrt(pow((m_destination.x - carPos.x), 2) + pow((m_destination.y - carPos.y), 2)) / sqrt(100*100 +80*80);
-    //std::cout << dist << std::endl;
+    //std::cout << angle << std::endl;
     inputs.push_back(dist);
 
     // Compute next decision
@@ -106,10 +106,10 @@ uint32_t NeuroController::updateFlags(Car * c) const
     //std::cout << outputs[0] << std::endl;
     //std::cout << outputs[1] << std::endl;
 
-    if(outputs[0] > threshold) flags |= Car::FORWARD;
-    if(outputs[1] > threshold) flags |= Car::BACKWARD;
-    //if(outputs[2] > threshold) flags |= Car::FORWARD;
-    //if(outputs[3] > threshold) flags |= Car::BACKWARD;
+    if(outputs[0] > threshold) flags |= Car::RIGHT;
+    if(outputs[1] > threshold) flags |= Car::LEFT;
+    if(outputs[2] > threshold) flags |= Car::FORWARD;
+    if(outputs[3] > threshold) flags |= Car::BACKWARD;
 
     return flags;
 }

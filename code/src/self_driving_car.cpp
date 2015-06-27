@@ -133,16 +133,16 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     }*/
 
     w->addRequiredDrawable(car);
-    
+
     b2Vec2 pos = car->getPos();
-    std::cout << pos.x << " " << pos.y << std::endl;
+    //std::cout << pos.x << " " << pos.y << std::endl;
 
     w->run();
 
     delete w;
 
     pos = car->getPos();
-    std::cout << pos.x << " " << pos.y << std::endl;
+    //std::cout << pos.x << " " << pos.y << std::endl;
 
     b2Vec2 destination = this->getSubject()->getDestination();
 
