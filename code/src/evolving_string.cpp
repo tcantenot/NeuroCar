@@ -138,7 +138,7 @@ void stringEvolution()
         strings.push_back(createIndividual<EvolvingString>("To be or not to be"));
     }
 
-    EvolutionParams params;
+    EvolutionParams<EvolvingStringDNA> params;
     params.mutationRate = 0.02;
     params.elitism = 2;
 

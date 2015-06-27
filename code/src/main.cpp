@@ -11,7 +11,7 @@
 
 #include <memory>
 
-//#include <evolving_string.hpp>
+#include <evolving_string.hpp>
 #include <neuro_controller.hpp>
 #include <self_driving_car.hpp>
 
@@ -49,7 +49,7 @@ void carEvolution()
     b2Vec2 destination(50, 40);
     uint32_t seed = 1;
 
-    for(auto i = 0; i < 100; ++i)
+    for(auto i = 0; i < 10; ++i)
     {
         // Create car
         std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(10, 10), toRadian(carAngle), 2, 3, 18.0, angles);
@@ -64,24 +64,25 @@ void carEvolution()
         cars.push_back(sdCar);
     }
 
-    NeuroCar::EvolutionParams params;
-    params.mutationRate = 0.5;
+    NeuroCar::EvolutionParams<NeuroCar::SelfDrivingCarDNA> params;
+    params.mutationRate = 0.05;
     params.elitism = 1;
 
-    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000, params);
-
-    /*for(auto & dna: dnas)
+    static auto const printHook = [](std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const & dnas)
     {
-        auto subject = dna.getSubject();
-        std::cout << subject->getGenes() << std::endl;
-    }*/
+        std::cout << "Hook: " << i << std::endl;
+    };
 
+    params.postGenHook = printHook;
+
+    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000, params);
 }
 
 int main(int argc, char const ** argv)
 {
     int32_t nthreads = argc > 1 ? std::atoi(argv[1]) : omp_get_max_threads();
     omp_set_num_threads(nthreads);
+    //NeuroCar::stringEvolution();
     carEvolution();
     return 0;
 }
