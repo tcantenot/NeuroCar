@@ -2,6 +2,7 @@
 #include <renderer.hpp>
 
 #include <random>
+
 #include <iostream>
 
 namespace NeuroCar {
@@ -153,7 +154,8 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::getFitness() const
 
 void SelfDrivingCarDNA::reset()
 {
-    //Car * c = m_subject->getCar();
+    Car * c = m_subject->getCar().get();
+    c->setMarkedForDeath(false);
 }
 
 SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
