@@ -32,6 +32,7 @@ class DNA
         virtual void randomize(std::size_t seed) = 0;
         virtual Fitness computeFitness() = 0;
         virtual Fitness getFitness() const = 0;
+        virtual void reset() = 0;
         virtual Subject crossover(DNAType const & partner) const = 0;
         virtual void mutate(MutationRate mutationRate) = 0;
 

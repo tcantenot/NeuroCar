@@ -151,6 +151,11 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::getFitness() const
     return m_fitness;
 }
 
+void SelfDrivingCarDNA::reset()
+{
+    //Car * c = m_subject->getCar();
+}
+
 SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
 {
     using NeuralNetwork = SelfDrivingCar::NeuralNetwork;

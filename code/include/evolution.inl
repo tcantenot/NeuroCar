@@ -130,6 +130,7 @@ void evolution(
         for(auto i = 0u; i < params.elitism; ++i)
         {
             nextGen[i] = matingPool[i].dna;
+            nextGen[i].reset();
         }
 
         // Create next generation

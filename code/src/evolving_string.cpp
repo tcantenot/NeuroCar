@@ -61,6 +61,11 @@ EvolvingStringDNA::Fitness EvolvingStringDNA::getFitness() const
     return m_fitness;
 }
 
+void EvolvingStringDNA::reset()
+{
+
+}
+
 EvolvingStringDNA::Subject EvolvingStringDNA::crossover(EvolvingStringDNA const & partner) const
 {
     assert(m_subject);
