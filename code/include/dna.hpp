@@ -25,8 +25,8 @@ class DNA
     public:
         DNA(Subject subject);
 
-        T * getSubject();
-        T const * getSubject() const;
+        Subject getSubject();
+        Subject getSubject() const;
         void setSubject(Subject subject);
 
         virtual void randomize(std::size_t seed) = 0;

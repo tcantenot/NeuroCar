@@ -70,6 +70,7 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     // Adding angle to destination as input
     b2Vec2 carPos = c->getPos();
+    //std::cout << "carPos: " << carPos.x << ", " << carPos.y << std::endl;
     double carAngle = c->getAngle() * 180.0 / M_PI;
 
     while (carAngle < -180)
@@ -94,8 +95,10 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     // Adding distance to destination as input
     double dist = sqrt(pow((m_destination.x - carPos.x), 2) + pow((m_destination.y - carPos.y), 2)) / sqrt(100*100 +80*80);
-    //std::cout << angle << std::endl;
     inputs.push_back(dist);
+
+    //std::cout << "input angle: " << angle << std::endl;
+    //std::cout << "input dist: " << dist << std::endl;
 
     // Compute next decision
     Weights outputs = m_neuralNetwork.compute(inputs);
@@ -103,8 +106,11 @@ uint32_t NeuroController::updateFlags(Car * c) const
     uint32_t flags = 0;
 
     float threshold = 0.5;
-    //std::cout << outputs[0] << std::endl;
-    //std::cout << outputs[1] << std::endl;
+
+    //std::cout << "output0: " << outputs[0] << std::endl;
+    //std::cout << "output1: " << outputs[1] << std::endl;
+    //std::cout << "output2: " << outputs[2] << std::endl;
+    //std::cout << "output3: " << outputs[3] << std::endl;
 
     if(outputs[0] > threshold) flags |= Car::RIGHT;
     if(outputs[1] > threshold) flags |= Car::LEFT;

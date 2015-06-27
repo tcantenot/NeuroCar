@@ -39,7 +39,6 @@ class SelfDrivingCar
         void setWorldSeed(uint32_t seed);
         uint32_t getWorldSeed();
 
-        std::shared_ptr<Car> & getCar();
         std::shared_ptr<Car> const & getCar() const ;
 
         void setCar(std::shared_ptr<Car> car);

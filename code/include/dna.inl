@@ -6,27 +6,27 @@
 namespace NeuroCar {
 
 template <typename T, typename DNAType>
-DNA<T, DNAType>::DNA(Subject subject): m_subject(std::move(subject))
+DNA<T, DNAType>::DNA(Subject subject): m_subject(subject)
 {
 
 }
 
 template <typename T, typename DNAType>
-T * DNA<T, DNAType>::getSubject()
+typename DNA<T, DNAType>::Subject DNA<T, DNAType>::getSubject()
 {
-    return m_subject.get();
+    return m_subject;
 }
 
 template <typename T, typename DNAType>
-T const * DNA<T, DNAType>::getSubject() const
+typename DNA<T, DNAType>::Subject DNA<T, DNAType>::getSubject() const
 {
-    return m_subject.get();
+    return m_subject;
 }
 
 template <typename T, typename DNAType>
 void DNA<T, DNAType>::setSubject(Subject subject)
 {
-    m_subject = std::move(subject);
+    m_subject = subject;
 }
 
 }

@@ -257,6 +257,8 @@ DNAs<DNAType> evolve(
         nextGen[i].computeFitness();
     }
 
+    params.postGenHook(ngenerations, nextGen);
+
     std::sort(std::begin(nextGen), std::end(nextGen),
         [](DNAType const & lhs, DNAType const & rhs)
         {

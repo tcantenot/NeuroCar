@@ -61,12 +61,6 @@ uint32_t SelfDrivingCar::getWorldSeed()
     return m_worldSeed;
 }
 
-
-std::shared_ptr<Car> & SelfDrivingCar::getCar()
-{
-    return m_car;
-}
-
 std::shared_ptr<Car> const & SelfDrivingCar::getCar() const
 {
     return m_car;
@@ -87,7 +81,7 @@ SelfDrivingCarDNA::SelfDrivingCarDNA(Subject subject):
 
 void SelfDrivingCarDNA::randomize(std::size_t seed)
 {
-    SelfDrivingCar * car = this->getSubject();
+    auto car = this->getSubject();
     NeuroController & nc = car->getNeuroController();
     SelfDrivingCar::NeuralNetwork & nn = nc.getNeuralNetwork();
     nn.setSeed(seed);
@@ -96,7 +90,6 @@ void SelfDrivingCarDNA::randomize(std::size_t seed)
 
 SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 {
-
     Fitness fitness = 0.0;
 
     std::shared_ptr<Car> car = this->getSubject()->getCar();
@@ -133,15 +126,43 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     }*/
 
     w->addRequiredDrawable(car);
+    if(0)
+    {
+        std::cout << "World " << w << std::endl;
+        auto car = m_subject->getCar();
+        auto body = car->getBody();
+        auto v = body->GetLinearVelocity();
+        std::cout << "Body linear velocity: " << v.x << ", " << v.y << std::endl;
+        auto p = body->GetPosition();
+        std::cout << "Body position: " << v.x << ", " << v.y << std::endl;
+        std::cout << "Body mass: " << body->GetMass() << std::endl;
+    }
 
-    b2Vec2 pos = car->getPos();
-    //std::cout << pos.x << " " << pos.y << std::endl;
+
+    if(0)
+    {
+        b2Vec2 pos = car->getPos();
+        //std::cout << "Body: " << car->getBody() << std::endl;
+        std::cout << pos.x << " " << pos.y << std::endl;
+        //std::cout << "Angle: "  << car->getAngle() << std::endl;
+        b2Vec2 destination = this->getSubject()->getDestination();
+        //std::cout << "Destination: "  << destination.x << ", " << destination.y << std::endl;
+    }
 
     w->run();
 
-    delete w;
+    if(0)
+    {
+        std::cout << "###" << std::endl;
+        //std::cout << "Body: " << car->getBody() << std::endl;
+        b2Vec2 pos = car->getPos();
+        std::cout << pos.x << " " << pos.y << std::endl;
+        //std::cout << "Angle: "  << car->getAngle() << std::endl;
+        b2Vec2 destination = this->getSubject()->getDestination();
+        //std::cout << "Destination: "  << destination.x << ", " << destination.y << std::endl;
+    }
 
-    pos = car->getPos();
+    b2Vec2 pos = car->getPos();
     //std::cout << pos.x << " " << pos.y << std::endl;
 
     b2Vec2 destination = this->getSubject()->getDestination();
@@ -149,6 +170,8 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     fitness = 100 - sqrt(std::pow((pos.x - destination.x), 2) + std::pow((pos.y - destination.y), 2));
 
     m_fitness = fitness;
+
+    delete w;
 
     return fitness;
 }
@@ -160,8 +183,13 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::getFitness() const
 
 void SelfDrivingCarDNA::reset()
 {
-    Car * c = m_subject->getCar().get();
-    c->setMarkedForDeath(false);
+    std::cout << "Reset" << std::endl;
+
+    // Copy and reset previous car
+    m_subject->setCar(std::make_shared<Car>(*m_subject->getCar()));
+
+    std::cout << *(m_subject->getCar()) << std::endl;
+
 }
 
 SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
@@ -170,16 +198,13 @@ SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const 
 
     assert(m_subject);
 
-    //Subject child(m_subject);
-
     Subject child = createIndividual<NeuroCar::SelfDrivingCar>(*m_subject);
 
+    // Copy and reset previous car
+    child->setCar(std::make_shared<Car>(*m_subject->getCar()));
 
-
-    Car * c = new Car(*m_subject->getCar());
-    std::shared_ptr<Car> car(c);
-    child->setCar(car);
-
+    std::cout << "Crossover" << std::endl;
+    std::cout << *(child->getCar()) << std::endl;
 
     static std::random_device rd;
     static std::default_random_engine rng(rd());
@@ -227,7 +252,7 @@ void SelfDrivingCarDNA::mutate(MutationRate mutationRate)
     std::uniform_real_distribution<double> lottery(0.0, 1.0);
     std::uniform_real_distribution<MutationRate> mutation(-1.0, 1.0);
 
-    SelfDrivingCar * car = this->getSubject();
+    auto car = this->getSubject();
     assert(car);
 
     auto & nn = car->getNeuralNetwork();
