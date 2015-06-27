@@ -96,9 +96,11 @@ void SelfDrivingCarDNA::randomize(std::size_t seed)
 
 SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 {
+
     Fitness fitness = 0.0;
 
     std::shared_ptr<Car> car = this->getSubject()->getCar();
+
 
     // Create world
     uint32_t worldWidth = 100;
@@ -116,9 +118,9 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 
     uint32_t seed = this->getSubject()->getWorldSeed();
 
-    w->randomize(worldWidth, worldHeight, 15, seed);
+    //w->randomize(worldWidth, worldHeight, 15, seed);
 
-    while (w->willCollide(car))
+    /*while (w->willCollide(car))
     {
         delete w;
         #if CAR_PHYSICS_GRAPHIC_MODE_SFML
@@ -127,20 +129,24 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
         w = new World(8, 3);
         #endif
         w->addBorders(worldWidth, worldHeight);
-        w->randomize(worldWidth, worldHeight, 15, ++seed);
-    }
+        //w->randomize(worldWidth, worldHeight, 15, ++seed);
+    }*/
 
     w->addRequiredDrawable(car);
+    
+    b2Vec2 pos = car->getPos();
+    std::cout << pos.x << " " << pos.y << std::endl;
 
     w->run();
 
     delete w;
 
-    b2Vec2 pos = car->getPos();
+    pos = car->getPos();
+    std::cout << pos.x << " " << pos.y << std::endl;
 
     b2Vec2 destination = this->getSubject()->getDestination();
 
-    fitness = 1/sqrt(std::pow((pos.x - destination.x), 2) + std::pow((pos.y - destination.y), 2));
+    fitness = 100 - sqrt(std::pow((pos.x - destination.x), 2) + std::pow((pos.y - destination.y), 2));
 
     m_fitness = fitness;
 
@@ -167,6 +173,8 @@ SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const 
     //Subject child(m_subject);
 
     Subject child = createIndividual<NeuroCar::SelfDrivingCar>(*m_subject);
+
+
 
     Car * c = new Car(*m_subject->getCar());
     std::shared_ptr<Car> car(c);

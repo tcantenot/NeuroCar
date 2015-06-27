@@ -170,12 +170,14 @@ DNAs<DNAType> evolve(
     DNAs<DNAType> dnas;
     dnas.reserve(population.size());
 
+    int seed = time(NULL);
+
     // Create initial DNAs
     for(auto i = 0u; i < population.size(); ++i)
     {
         assert(population[i] != nullptr);
         DNAType dna(population[i]);
-        dna.randomize(i);
+        dna.randomize(seed+i);
         dnas.emplace_back(std::move(dna));
     }
 
