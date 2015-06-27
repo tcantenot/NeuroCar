@@ -1,7 +1,7 @@
 #include <neuro_controller.hpp>
-#include <car.hpp>
 #include <functions.hpp>
 
+#include <cmath>
 
 namespace NeuroCar {
 
@@ -11,8 +11,8 @@ NeuroController::NeuroController():
 {
     //Shape
     NeuralNetwork::Shape shape;
-    shape.push_back(10);
-    shape.push_back(10);
+    shape.push_back(12);
+    shape.push_back(12);
     shape.push_back(4);
     m_neuralNetwork.setShape(shape);
     m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
@@ -48,6 +48,11 @@ void NeuroController::setNeuralNetwork(NeuralNetwork const & nn)
     m_neuralNetwork = nn;
 }
 
+void NeuroController::setDestination(b2Vec2 destination)
+{
+    m_destination = destination;
+}
+
 uint32_t NeuroController::updateFlags(Car * c) const
 {
     using Weights = std::vector<NeuroEvolution::Weight>;
@@ -56,10 +61,40 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     std::vector<float32> dists = c->getDist();
 
+    // Adding raycast results as input
     for (auto it = dists.begin(); it != dists.end();++it)
     {
         inputs.push_back(*it);
     }
+
+    // Adding angle to destination as input
+    b2Vec2 carPos = c->getPos();
+    double carAngle = c->getAngle() * 180.0 / M_PI;
+
+    while (carAngle < -180)
+    {
+        carAngle += 360;
+    }
+
+    while (carAngle > 180)
+    {
+        carAngle -= 360;
+    }
+
+
+    double deltax = m_destination.x - carPos.x;
+    double deltay = m_destination.y - carPos.y;
+
+    double angle = atan2(deltay, deltax) * 180 / M_PI;
+
+    angle += carAngle;
+
+    inputs.push_back(angle);
+
+    // Adding distance to destination as input
+    double dist = sqrt(pow((m_destination.x - carPos.x), 2) + pow((m_destination.y - carPos.y), 2));
+
+    inputs.push_back(dist);
 
     // Compute next decision
     Weights outputs = m_neuralNetwork.compute(inputs);

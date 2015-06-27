@@ -46,6 +46,7 @@ b2Vec2 const & SelfDrivingCar::getDestination() const
 void SelfDrivingCar::setDestination(b2Vec2 destination)
 {
     m_destination = destination;
+    m_neuroController.setDestination(destination);
 }
 
 void SelfDrivingCar::setWorldSeed(uint32_t seed)
