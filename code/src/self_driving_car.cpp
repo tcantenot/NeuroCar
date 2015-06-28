@@ -3,15 +3,13 @@
 
 #include <random>
 
-#include <iostream>
-
 namespace NeuroCar {
 
 SelfDrivingCar::SelfDrivingCar():
     m_car(nullptr),
     m_neuroController()
 {
-    //m_car->setController(&m_neuroController);
+
 }
 
 NeuroController & SelfDrivingCar::getNeuroController()
@@ -90,88 +88,68 @@ void SelfDrivingCarDNA::randomize(std::size_t seed)
 
 SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
 {
-    Fitness fitness = 0.0;
+    uint32_t const worldWidth = 100;
+    uint32_t const worldHeight = 80;
+    uint32_t const nbObstacles = 15;
 
-    std::shared_ptr<Car> car = this->getSubject()->getCar();
-
-
-    // Create world
-    uint32_t worldWidth = 100;
-    uint32_t worldHeight = 80;
-
+    // Create world lambda
     #if CAR_PHYSICS_GRAPHIC_MODE_SFML
     Renderer r(8, worldWidth, worldHeight);
-    World *w = new World(8, 3, &r);
+    auto const createWorld = [&r](
+        uint32_t w, uint32_t h, uint32_t nbObstacles, uint32_t seed
+    )
+    {
+        World * world = new World(8, 3, &r, 10, 2);
+        world->addBorders(w, h);
+        //world->randomize(w, h, nbObstacles, seed);
+        return world;
+    };
     #else
-    World *w = new World(8, 3);
+    auto const createWorld = [](
+        uint32_t w, uint32_t h, uint32_t nbObstacles, uint32_t seed
+    )
+    {
+        World * world = new World(8, 3, 10);
+        world->addBorders(w, h);
+        //world->randomize(w, h, nbObstacles, seed);
+        return world;
+    };
     #endif
-
-
-    w->addBorders(worldWidth, worldHeight);
 
     uint32_t seed = this->getSubject()->getWorldSeed();
 
-    //w->randomize(worldWidth, worldHeight, 15, seed);
+    World * world = createWorld(worldWidth, worldHeight, nbObstacles, seed);
 
-    /*while (w->willCollide(car))
-    {
-        delete w;
-        #if CAR_PHYSICS_GRAPHIC_MODE_SFML
-        w = new World(8, 3, &r);
-        #else
-        w = new World(8, 3);
-        #endif
-        w->addBorders(worldWidth, worldHeight);
-        //w->randomize(worldWidth, worldHeight, 15, ++seed);
-    }*/
+    std::shared_ptr<Car> car = this->getSubject()->getCar();
 
-    w->addRequiredDrawable(car);
-    if(0)
+    // Generate worlds until one is valid
+#if 0
+    while(world->willCollide(car))
     {
-        std::cout << "World " << w << std::endl;
-        auto car = m_subject->getCar();
-        auto body = car->getBody();
-        auto v = body->GetLinearVelocity();
-        std::cout << "Body linear velocity: " << v.x << ", " << v.y << std::endl;
-        auto p = body->GetPosition();
-        std::cout << "Body position: " << v.x << ", " << v.y << std::endl;
-        std::cout << "Body mass: " << body->GetMass() << std::endl;
+        delete world;
+        world = createWorld(worldWidth, worldHeight, nbObstacles, ++seed);
     }
+#endif
 
+    world->addRequiredDrawable(car);
 
-    if(0)
-    {
-        b2Vec2 pos = car->getPos();
-        //std::cout << "Body: " << car->getBody() << std::endl;
-        std::cout << pos.x << " " << pos.y << std::endl;
-        //std::cout << "Angle: "  << car->getAngle() << std::endl;
-        b2Vec2 destination = this->getSubject()->getDestination();
-        //std::cout << "Destination: "  << destination.x << ", " << destination.y << std::endl;
-    }
-
-    w->run();
-
-    if(0)
-    {
-        std::cout << "###" << std::endl;
-        //std::cout << "Body: " << car->getBody() << std::endl;
-        b2Vec2 pos = car->getPos();
-        std::cout << pos.x << " " << pos.y << std::endl;
-        //std::cout << "Angle: "  << car->getAngle() << std::endl;
-        b2Vec2 destination = this->getSubject()->getDestination();
-        //std::cout << "Destination: "  << destination.x << ", " << destination.y << std::endl;
-    }
+    world->run();
 
     b2Vec2 pos = car->getPos();
-    //std::cout << pos.x << " " << pos.y << std::endl;
 
     b2Vec2 destination = this->getSubject()->getDestination();
 
-    fitness = 100 - sqrt(std::pow((pos.x - destination.x), 2) + std::pow((pos.y - destination.y), 2));
+    static auto const distance = [](b2Vec2 const & lhs, b2Vec2 const & rhs)
+    {
+        return std::sqrt(std::pow(rhs.x - lhs.x, 2) + std::pow(rhs.y - lhs.y, 2));
+    };
 
+    float const maxDistance = distance(b2Vec2(0.0, 0.0), b2Vec2(worldWidth, worldHeight));
+
+    Fitness fitness = 1.0 - (distance(pos, destination) / maxDistance);
     m_fitness = fitness;
 
-    delete w;
+    delete world;
 
     return fitness;
 }
@@ -183,13 +161,8 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::getFitness() const
 
 void SelfDrivingCarDNA::reset()
 {
-    std::cout << "Reset" << std::endl;
-
     // Copy and reset previous car
-    m_subject->setCar(std::make_shared<Car>(*m_subject->getCar()));
-
-    std::cout << *(m_subject->getCar()) << std::endl;
-
+    m_subject->setCar(m_subject->getCar()->cloneInitial());
 }
 
 SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const & partner) const
@@ -201,10 +174,7 @@ SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const 
     Subject child = createIndividual<NeuroCar::SelfDrivingCar>(*m_subject);
 
     // Copy and reset previous car
-    child->setCar(std::make_shared<Car>(*m_subject->getCar()));
-
-    std::cout << "Crossover" << std::endl;
-    std::cout << *(child->getCar()) << std::endl;
+    child->setCar(m_subject->getCar()->cloneInitial());
 
     static std::random_device rd;
     static std::default_random_engine rng(rd());
@@ -237,7 +207,7 @@ SelfDrivingCarDNA::Subject SelfDrivingCarDNA::crossover(SelfDrivingCarDNA const 
             }
 
             NeuralNetwork const & nn = selectParent(random(rng));
-            // j because the the weight are stored in transpose
+            // j because bias vectors start at layer 1
             childGenes.setBias(l, j, nn.getBias(l, j));
         }
     }
@@ -278,13 +248,12 @@ void SelfDrivingCarDNA::mutate(MutationRate mutationRate)
             MutationRate r = lottery(rng);
             if(r < mutationRate)
             {
-                // j because the the weight are stored in transpose
+                // j because bias vectors start at layer 1
                 auto b = nn.getBias(l, j) + mutation(rng);
                 nn.setBias(l, j, b);
             }
         }
     }
 }
-
 
 }

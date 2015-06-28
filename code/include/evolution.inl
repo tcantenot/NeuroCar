@@ -11,7 +11,6 @@
 #include <cassert>
 #include <chrono>
 #include <functional>
-#include <iostream>
 
 
 namespace NeuroCar {
@@ -51,30 +50,12 @@ void evolution(
 
     std::size_t const popSize = dnas.size();
 
-#if 0
-    std::cout << "BEFORE" << std::endl;
-    for(auto n = 0u; n < dnas.size(); ++n)
-        std::cout << "Individual " << n << ": " << ((dnas[n].getSubject())) << " (fitness: " << dnas[n].getFitness() << ")" << std::endl;
-
-    for(auto i = 0u; i < 5; ++i)
-    {
-        std::cout << "FITNESS: " << dnas[0].computeFitness() << std::endl;
-        dnas[0].reset();
-    }
-#endif
-
     // Compute the fitness of the dnas
     #pragma omp parallel for schedule(dynamic, 1)
     for(auto i = 0u; i < popSize; ++i)
     {
         dnas[i].computeFitness();
     }
-
-#if 0
-    std::cout << "AFTER" << std::endl;
-    for(auto n = 0u; n < dnas.size(); ++n)
-        std::cout << "Individual " << n << ": " << ((dnas[n].getSubject())) << " (fitness: " << dnas[n].getFitness() << ")" << std::endl;
-#endif
 
     Fitness cumulativeFitness = 0.0;
     #pragma omp parallel for reduction(+:cumulativeFitness)
@@ -109,18 +90,6 @@ void evolution(
         cumulativeScore += dna.score;
         dna.score = cumulativeScore;
     }
-
-#if 0
-    {
-        //auto n = matingPool.size() - 1;
-        //std::cout << "Best Individual: " << (&matingPool[0].dna) << " (fitness: " << matingPool[0].dna.get().getFitness() << ", relative fitness:" << matingPool[0].score << ")" << std::endl;
-        //std::cout << "Worst Individual: " << (&matingPool[n].dna) << " (fitness: " << matingPool[n].dna.get().getFitness() << ", relative fitness:" << matingPool[n].score << ")" << std::endl;
-
-
-        for(auto n = 0u; n < matingPool.size(); ++n)
-            std::cout << "Individual " << n << ": " << ((matingPool[n].dna.get().getSubject())) << " (fitness: " << matingPool[n].dna.get().getFitness() << ", relative fitness:" << matingPool[n].score << ")" << std::endl;
-    }
-#endif
 
     // Reproduce
     MutationRate const mutationRate = params.mutationRate;
@@ -229,28 +198,21 @@ DNAs<DNAType> evolve(
     // Evolve
     for(auto i = 0u; i < ngenerations; ++i)
     {
-        std::cout << "Generation " << i << std::endl;
+        params.preGenHook(i, dnas);
 
         evolution(dnas, nextGen, matingPool, params);
 
         params.postGenHook(i, dnas);
 
         std::swap(nextGen, dnas);
-
-#if 1
-        typename DNA<T, DNAType>::Fitness maxFitness = 0.0;
-        for(auto const & dna: dnas)
-        {
-            auto f = dna.getFitness();
-            maxFitness = std::max(f, maxFitness);
-        }
-        std::cout << "Max fitness: " << maxFitness << std::endl;
-#endif
     }
 
     // Evaluate the last generation
     std::swap(nextGen, dnas);
     std::size_t const popSize = nextGen.size();
+
+    params.preGenHook(ngenerations, nextGen);
+
     #pragma omp parallel for schedule(dynamic, 1)
     for(auto i = 0u; i < popSize; ++i)
     {

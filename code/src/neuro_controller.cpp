@@ -3,7 +3,6 @@
 
 #include <cmath>
 
-#include <iostream>
 namespace NeuroCar {
 
 NeuroController::NeuroController():
@@ -60,25 +59,22 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     Weights inputs;
 
-    std::vector<float32> dists = c->getDist();
-
     // Adding raycast results as input
-    /*for (auto it = dists.begin(); it != dists.end();++it)
+    /*for(auto d : c->getCollisionDists())
     {
-        inputs.push_back(*it);
+        inputs.push_back(d);
     }*/
 
     // Adding angle to destination as input
     b2Vec2 carPos = c->getPos();
-    //std::cout << "carPos: " << carPos.x << ", " << carPos.y << std::endl;
     double carAngle = c->getAngle() * 180.0 / M_PI;
 
-    while (carAngle < -180)
+    while(carAngle < -180)
     {
         carAngle += 360;
     }
 
-    while (carAngle > 180)
+    while(carAngle > 180)
     {
         carAngle -= 360;
     }
@@ -87,18 +83,22 @@ uint32_t NeuroController::updateFlags(Car * c) const
     double deltax = m_destination.x - carPos.x;
     double deltay = m_destination.y - carPos.y;
 
-    double angle = atan2(deltay, deltax) * 180 / M_PI;
+    double angle = std::atan2(deltay, deltax) * 180.0 / M_PI;
 
     angle += carAngle;
 
     inputs.push_back(angle);
 
     // Adding distance to destination as input
-    double dist = sqrt(pow((m_destination.x - carPos.x), 2) + pow((m_destination.y - carPos.y), 2)) / sqrt(100*100 +80*80);
-    inputs.push_back(dist);
+    double dist = std::sqrt(
+        std::pow((m_destination.x - carPos.x), 2) +
+        std::pow((m_destination.y - carPos.y), 2)
+    );
 
-    //std::cout << "input angle: " << angle << std::endl;
-    //std::cout << "input dist: " << dist << std::endl;
+    // FIXME: ugly
+    //dist /= std::sqrt(100.0 * 100.0 + 80.0 * 80.0);
+
+    inputs.push_back(dist);
 
     // Compute next decision
     Weights outputs = m_neuralNetwork.compute(inputs);
@@ -106,11 +106,6 @@ uint32_t NeuroController::updateFlags(Car * c) const
     uint32_t flags = 0;
 
     float threshold = 0.5;
-
-    //std::cout << "output0: " << outputs[0] << std::endl;
-    //std::cout << "output1: " << outputs[1] << std::endl;
-    //std::cout << "output2: " << outputs[2] << std::endl;
-    //std::cout << "output3: " << outputs[3] << std::endl;
 
     if(outputs[0] > threshold) flags |= Car::RIGHT;
     if(outputs[1] > threshold) flags |= Car::LEFT;

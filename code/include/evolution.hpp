@@ -22,13 +22,15 @@ struct EvolutionParams
 {
     using MutationRate = double;
     using Elitism = uint32_t;
-    using PostGenerationHook = std::function<void (std::size_t, DNAs<DNAType> const &)>;
+    using GenerationHook = std::function<void (std::size_t, DNAs<DNAType> const &)>;
 
     MutationRate mutationRate = 0.01;
     Elitism elitism = 1;
-    PostGenerationHook postGenHook = PostGenerationHook(defaultPostGenHook);
+    GenerationHook preGenHook  = GenerationHook(defaultPreGenHook);
+    GenerationHook postGenHook = GenerationHook(defaultPostGenHook);
 
     private:
+        static void defaultPreGenHook(std::size_t, DNAs<DNAType> const &) { }
         static void defaultPostGenHook(std::size_t, DNAs<DNAType> const &) { }
 };
 

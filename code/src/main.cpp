@@ -20,27 +20,11 @@
 #include <io_utils.hpp>
 #include <serialization.hpp>
 
-void carEvolution()
+void carEvolution(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed);
+void replayBest(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed);
+
+void carMain(int argc, char const **)
 {
-    NeuroCar::Population<NeuroCar::SelfDrivingCar> cars;
-
-    std::vector<float32> angles;
-    //angles to ray cast
-    angles.push_back(0.0f);
-    angles.push_back(b2_pi);
-
-    angles.push_back(b2_pi/2.0f);
-    angles.push_back(-b2_pi/2.0f);
-
-    angles.push_back(b2_pi/4.0f);
-    angles.push_back(-b2_pi/4.0f);
-
-    angles.push_back(b2_pi/8.0f);
-    angles.push_back(-b2_pi/8.0f);
-
-    angles.push_back(3.0f*b2_pi/8.0f);
-    angles.push_back(-3.0f*b2_pi/8.0f);
-
     static auto const toRadian = [](float32 degree)
     {
         return degree * M_PI / 180.0;
@@ -48,21 +32,55 @@ void carEvolution()
 
     float32 carAngle = 0.0;
 
-    b2Vec2 destination(50, 40);
-    uint32_t seed = 1;
+    // Create car
+    CarDef carDef;
+    carDef.initPos = b2Vec2(10, 10);
+    carDef.initAngle = toRadian(carAngle);
+    carDef.width = 2.0;
+    carDef.height = 3.0;
+    carDef.acceleration = 18.0;
 
-    for(auto i = 0; i < 5; ++i)
+    //angles to ray cast
+    carDef.raycastAngles.push_back(0.0f);
+    carDef.raycastAngles.push_back(b2_pi);
+
+    carDef.raycastAngles.push_back(b2_pi/2.0f);
+    carDef.raycastAngles.push_back(-b2_pi/2.0f);
+
+    carDef.raycastAngles.push_back(b2_pi/4.0f);
+    carDef.raycastAngles.push_back(-b2_pi/4.0f);
+
+    carDef.raycastAngles.push_back(b2_pi/8.0f);
+    carDef.raycastAngles.push_back(-b2_pi/8.0f);
+
+    carDef.raycastAngles.push_back(3.0f*b2_pi/8.0f);
+    carDef.raycastAngles.push_back(-3.0f*b2_pi/8.0f);
+
+    b2Vec2 destination(100, 80);
+    int32_t worldSeed = 1;
+
+    if(argc == 2)
     {
-        // Create car
-        std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(10, 10), toRadian(carAngle), 2, 3, 18.0, angles);
+        carEvolution(carDef, destination, worldSeed);
+    }
+    else
+    {
+        omp_set_num_threads(1);
+        replayBest(carDef, destination, worldSeed);
+    }
+}
 
 
-        NeuroCar::Individual<NeuroCar::SelfDrivingCar> sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
+void carEvolution(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed)
+{
+    NeuroCar::Population<NeuroCar::SelfDrivingCar> cars;
 
-        sdCar->setCar(car);
+    for(auto i = 0; i < 100; ++i)
+    {
+        auto sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
+        sdCar->setCar(std::make_shared<Car>(carDef));
         sdCar->setDestination(destination);
-        sdCar->setWorldSeed(seed);
-
+        sdCar->setWorldSeed(worldSeed);
         cars.push_back(sdCar);
     }
 
@@ -70,9 +88,14 @@ void carEvolution()
     params.mutationRate = 0.5;
     params.elitism = 2;
 
-    static auto const printHook = [](std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const & dnas)
+    static auto const preGenHook = [](std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const &)
     {
-        std::cout << "Hook: " << i << std::endl;
+        std::cout << "Generation " << i << std::endl;
+    };
+
+    static auto const saveToFileHook = [](std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const & dnas)
+    {
+        std::cout << "Saving generation " << i << "..." << std::endl;
 
         NeuroCar::SelfDrivingCarDNA const & bestDNA = *std::max_element(dnas.begin(), dnas.end(),
             [](NeuroCar::SelfDrivingCarDNA const & lhs, NeuroCar::SelfDrivingCarDNA const & rhs)
@@ -82,6 +105,7 @@ void carEvolution()
         );
 
         auto car = bestDNA.getSubject();
+        std::cout << "Best DNA fitness: " << bestDNA.getFitness() << std::endl;
         NeuroCar::NeuroController const & nc = car->getNeuroController();
         NeuroCar::SelfDrivingCar::NeuralNetwork const & nn = nc.getNeuralNetwork();
         std::stringstream filename;
@@ -91,76 +115,37 @@ void carEvolution()
         //std::cout << nn << std::endl;
     };
 
-    params.postGenHook = printHook;
+    params.preGenHook  = preGenHook;
+    params.postGenHook = saveToFileHook;
 
-    NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000, params);
+    auto dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000, params);
 }
 
-void replayBest()
+void replayBest(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed)
 {
-    NeuroCar::Population<NeuroCar::SelfDrivingCar> cars;
-
-    std::vector<float32> angles;
-    //angles to ray cast
-    angles.push_back(0.0f);
-    angles.push_back(b2_pi);
-
-    angles.push_back(b2_pi/2.0f);
-    angles.push_back(-b2_pi/2.0f);
-
-    angles.push_back(b2_pi/4.0f);
-    angles.push_back(-b2_pi/4.0f);
-
-    angles.push_back(b2_pi/8.0f);
-    angles.push_back(-b2_pi/8.0f);
-
-    angles.push_back(3.0f*b2_pi/8.0f);
-    angles.push_back(-3.0f*b2_pi/8.0f);
-
-    static auto const toRadian = [](float32 degree)
-    {
-        return degree * M_PI / 180.0;
-    };
-
-    float32 carAngle = 0.0;
-
-    b2Vec2 destination(50, 40);
-    uint32_t seed = 1;
-
-    // Create car
-    std::shared_ptr<Car> car = std::make_shared<Car>(b2Vec2(10, 10), toRadian(carAngle), 2, 3, 18.0, angles);
-
-#if 1
-    NeuroCar::Individual<NeuroCar::SelfDrivingCar> sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
-
     NeuroEvolution::NeuralNetwork nn;
 
     if(!loadFromFile("last_best_nn.txt", nn))
     {
         std::cout << "Failed to reload nn from file " << std::endl;
+        return;
     }
 
+    std::cout << nn << std::endl;
+
+    NeuroCar::Individual<NeuroCar::SelfDrivingCar> sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
     sdCar->setNeuroController(NeuroCar::NeuroController(nn));
-    sdCar->setCar(car);
+    sdCar->setCar(std::make_shared<Car>(carDef));
     sdCar->setDestination(destination);
-    sdCar->setWorldSeed(seed);
+    sdCar->setWorldSeed(worldSeed);
 
     NeuroCar::SelfDrivingCarDNA dna(sdCar);
-    for(auto i = 0u; i < 2; ++i)
+    for(auto i = 0u; i < 1; ++i)
     {
-        auto sdcar = dna.getSubject();
-        Car * car = sdcar->getCar().get();
-        //NeuroCar::NeuroController const & nc = car->getNeuroController();
-        //NeuroCar::SelfDrivingCar::NeuralNetwork const & nn = nc.getNeuralNetwork();
-        //std::cout << nn << std::endl;
-        //std::cout << "Car: " <<  car << std::endl;
-        //std::cout << *car << std::endl;
-
-        dna.computeFitness();
+        auto fitness = dna.computeFitness();
+        std::cout << "Fitness = " << fitness << std::endl;
         dna.reset();
-        std::cout << std::endl << std::endl;
     }
-#endif
 }
 
 int main(int argc, char const ** argv)
@@ -168,17 +153,6 @@ int main(int argc, char const ** argv)
     int32_t nthreads = argc > 1 ? std::atoi(argv[1]) : omp_get_max_threads();
     omp_set_num_threads(nthreads);
     //NeuroCar::stringEvolution();
-    if(argc == 2)
-    {
-        carEvolution();
-    }
-    else
-    {
-        omp_set_num_threads(1);
-        std::cout << "Replay best" << std::endl;
-        std::cout << std::endl;
-        replayBest();
-    }
-
+    carMain(argc, argv);
     return 0;
 }
