@@ -1,5 +1,5 @@
-#ifndef NEURO_CAR_EVOLUTION_INL
-#define NEURO_CAR_EVOLUTION_INL
+#ifndef EVOLUTION_INL
+#define EVOLUTION_INL
 
 #include "evolution.hpp"
 
@@ -11,9 +11,6 @@
 #include <cassert>
 #include <chrono>
 #include <functional>
-
-
-namespace NeuroCar {
 
 namespace {
 
@@ -232,6 +229,4 @@ DNAs<DNAType> evolve(
     return nextGen;
 }
 
-}
-
-#endif //NEURO_CAR_EVOLUTION_INL
+#endif //EVOLUTION_INL

@@ -1,14 +1,11 @@
-#ifndef NEURO_CAR_EVOLUTION_HPP
-#define NEURO_CAR_EVOLUTION_HPP
+#ifndef EVOLUTION_HPP
+#define EVOLUTION_HPP
 
 #include <cstddef>
 #include <functional>
 #include <vector>
 
 #include <dna.hpp>
-
-
-namespace NeuroCar {
 
 template <typename T>
 using Population = std::vector<Individual<T>>;
@@ -41,8 +38,6 @@ DNAs<DNAType> evolve(
     EvolutionParams<DNAType> const & params = { }
 );
 
-}
-
 #include "evolution.inl"
 
-#endif //NEURO_CAR_EVOLUTION_HPP
+#endif //EVOLUTION_HPP

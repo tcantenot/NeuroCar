@@ -10,8 +10,6 @@
 
 
 
-namespace NeuroCar {
-
 namespace {
 
 static const char ALPHABET[] =
@@ -142,6 +140,4 @@ void stringEvolution()
         auto subject = dna.getSubject();
         std::cout << subject->getGenes() << std::endl;
     }
-}
-
 }

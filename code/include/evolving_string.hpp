@@ -1,12 +1,10 @@
-#ifndef NEURO_CAR_EVOLVING_STRING
-#define NEURO_CAR_EVOLVING_STRING
+#ifndef EVOLVING_STRING
+#define EVOLVING_STRING
 
 #include <string>
 
 #include <dna.hpp>
 #include <evolution.hpp>
-
-namespace NeuroCar {
 
 struct EvolvingString
 {
@@ -59,6 +57,4 @@ class EvolvingStringDNA : public DNA<EvolvingString, EvolvingStringDNA>
 
 void stringEvolution();
 
-}
-
-#endif //NEURO_CAR_EVOLVING_STRING
+#endif //EVOLVING_STRING

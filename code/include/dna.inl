@@ -1,9 +1,7 @@
-#ifndef NEURO_CAR_DNA_INL
-#define NEURO_CAR_DNA_INL
+#ifndef DNA_INL
+#define DNA_INL
 
 #include "dna.hpp"
-
-namespace NeuroCar {
 
 template <typename T, typename DNAType>
 DNA<T, DNAType>::DNA(Subject subject): m_subject(subject), m_fitness(0)
@@ -35,6 +33,4 @@ typename DNA<T, DNAType>::Fitness DNA<T, DNAType>::getFitness() const
     return m_fitness;
 }
 
-}
-
-#endif //NEURO_CAR_DNA_INL
+#endif //DNA_INL

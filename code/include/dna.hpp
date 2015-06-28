@@ -1,9 +1,7 @@
-#ifndef NEURO_CAR_DNA_HPP
-#define NEURO_CAR_DNA_HPP
+#ifndef DNA_HPP
+#define DNA_HPP
 
 #include <memory>
-
-namespace NeuroCar {
 
 template <typename T>
 using Individual = std::shared_ptr<T>;
@@ -41,8 +39,6 @@ class DNA
         Fitness m_fitness;
 };
 
-}
-
 #include "dna.inl"
 
-#endif //NEURO_CAR_DNA_HPP
+#endif //DNA_HPP
