@@ -199,11 +199,12 @@ include_directories(SYSTEM ${NEURO_CAR_EXTERN_INCLUDE_DIRS})
 
 # Source files
 set(NEURO_CAR_HEADERS
-    ${NEURO_CAR_INCLUDE_DIR}/neuro_controller.hpp
+    ${NEURO_CAR_INCLUDE_DIR}/cmd_options.hpp
     ${NEURO_CAR_INCLUDE_DIR}/dna.hpp
     ${NEURO_CAR_INCLUDE_DIR}/evolution.hpp
     ${NEURO_CAR_INCLUDE_DIR}/evolution.inl
     ${NEURO_CAR_INCLUDE_DIR}/evolving_string.hpp
+    ${NEURO_CAR_INCLUDE_DIR}/neuro_controller.hpp
     ${NEURO_CAR_INCLUDE_DIR}/self_driving_car.hpp
 )
 

@@ -1,6 +1,8 @@
 #include <cstdint>
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include <car.hpp>
 #include <renderer.hpp>
@@ -20,11 +22,126 @@
 #include <io_utils.hpp>
 #include <serialization.hpp>
 
-void carEvolution(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed);
-void replayBest(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed);
+#include <cmd_options.hpp>
 
-void carMain(int argc, char const **)
+void carEvolution(
+    CarDef const & carDef,
+    b2Vec2 const & destination,
+    int32_t worldSeed,
+    double mutationRate,
+    uint32_t elitism,
+    std::size_t nindividuals,
+    std::size_t ngenerations,
+    std::string const & filename
+)
 {
+    NeuroCar::Population<NeuroCar::SelfDrivingCar> cars;
+
+    for(auto i = 0u; i < nindividuals; ++i)
+    {
+        auto sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
+        sdCar->setCar(std::make_shared<Car>(carDef));
+        sdCar->setDestination(destination);
+        sdCar->setWorldSeed(worldSeed);
+        cars.push_back(sdCar);
+    }
+
+    static auto const preGenHook = [](
+        std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const &
+    )
+    {
+        std::cout << "Generation " << i << std::endl;
+    };
+
+    auto const saveToFileHook = [&filename](
+        std::size_t, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const & dnas
+    )
+    {
+        auto const & bestDNA = *std::max_element(dnas.begin(), dnas.end(),
+            [](NeuroCar::SelfDrivingCarDNA const & lhs, NeuroCar::SelfDrivingCarDNA const & rhs)
+            {
+                return lhs.getFitness() < rhs.getFitness();
+            }
+        );
+
+        std::cout << "Best DNA fitness: " << bestDNA.getFitness() << std::endl;
+
+        auto car = bestDNA.getSubject();
+        NeuroCar::NeuroController const & nc = car->getNeuroController();
+        NeuroCar::SelfDrivingCar::NeuralNetwork const & nn = nc.getNeuralNetwork();
+
+        //std::stringstream fname;
+        //fname << "best_nn_" << i << ".txt";
+        //NeuroEvolution::saveToFile(nn, fname.str());
+
+        std::cout << "Saving to \"" << filename << "\"" << std::endl;
+        NeuroEvolution::saveToFile(nn, filename);
+    };
+
+    NeuroCar::EvolutionParams<NeuroCar::SelfDrivingCarDNA> params;
+    params.mutationRate = mutationRate;
+    params.elitism      = elitism;
+    params.preGenHook   = preGenHook;
+    params.postGenHook  = saveToFileHook;
+
+    static auto const p = [](b2Vec2 const & v)
+    {
+        return std::string("(") + std::to_string(v.x) + ", " + std::to_string(v.y) + ")";
+    };
+
+    std::cout << "### NeuroCar Evolution ###" << std::endl;
+    std::cout << "  Number of individuals: " << nindividuals      << std::endl;
+    std::cout << "  Number of generations: " << ngenerations      << std::endl;
+    std::cout << "  Mutation rate:         " << mutationRate      << std::endl;
+    std::cout << "  Elitism:               " << elitism           << std::endl;
+    std::cout << "  World seed:            " << worldSeed         << std::endl;
+    std::cout << "  Starting point:        " << p(carDef.initPos) << std::endl;
+    std::cout << "  Destination:           " << p(destination)    << std::endl;
+    std::cout << "  Output filename:       " << filename          << std::endl;
+    std::cout << std::endl;
+
+    NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, ngenerations, params);
+}
+
+void replayBest(
+    CarDef const & carDef,
+    b2Vec2 const & destination,
+    int32_t worldSeed,
+    std::string const & filename
+)
+{
+    NeuroEvolution::NeuralNetwork nn;
+
+    if(!loadFromFile(filename, nn))
+    {
+        std::cout << "Failed to reload nn from file \""
+                  << filename << "\"" << std::endl;
+        return;
+    }
+
+    std::cout << "### NeuroCar Replay ###" << std::endl;
+    std::cout << nn << std::endl << std::endl;
+
+    auto sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
+    sdCar->setNeuroController(NeuroCar::NeuroController(nn));
+    sdCar->setCar(std::make_shared<Car>(carDef));
+    sdCar->setDestination(destination);
+    sdCar->setWorldSeed(worldSeed);
+
+    NeuroCar::SelfDrivingCarDNA dna(sdCar);
+    auto fitness = dna.computeFitness();
+    std::cout << "Fitness = " << fitness << std::endl;
+}
+
+void carMain(int argc, char ** argv)
+{
+    // "-h" option: Help
+    if(cmdOptionExists(argc, argv, "-h"))
+    {
+        std::cout << "### NeuroCar Help ###" << std::endl;
+        return;
+    }
+
     static auto const toRadian = [](float32 degree)
     {
         return degree * M_PI / 180.0;
@@ -57,101 +174,88 @@ void carMain(int argc, char const **)
     carDef.raycastAngles.push_back(-3.0f*b2_pi/8.0f);
 
     b2Vec2 destination(100, 80);
-    int32_t worldSeed = 0x42;
 
-    if(argc == 2)
+    int32_t worldSeed = 0;
+    std::string filename = "last_best_nn.txt";
+    double mutationRate = 0.01;
+    uint32_t elitism = 2;
+    std::size_t nindividuals = 100;
+    std::size_t ngenerations = 100;
+
+    // "-s" option: World seed
+    int32_t seed = 0;
+    if(getCmdOption(argc, argv, "-s", seed)) worldSeed = seed;
+
+    // "-m" option: Mutation rate
+    double mr = 0.0;
+    if(getCmdOption(argc, argv, "-m", mr)) mutationRate = mr;
+
+    // "-e" option: Mutation rate
+    uint32_t e = 0.0;
+    if(getCmdOption(argc, argv, "-e", e)) elitism = e;
+
+    // "-i" option: Number of individuals
+    std::size_t nindiv = 0;
+    if(getCmdOption(argc, argv, "-i", nindiv)) nindividuals = nindiv;
+
+    // "-g" option: Number of generations
+    std::size_t ngen = 0;
+    if(getCmdOption(argc, argv, "-g", ngen)) ngenerations = ngen;
+
+    // "-r" or "--replay" option: replay best DNA
+    if(cmdOptionExists(argc, argv, "-r", "--replay"))
     {
-        carEvolution(carDef, destination, worldSeed);
-    }
-    else
-    {
+        char * f = getCmdOption(argc, argv, "-f");
+        if(f) filename = f;
+
+        #ifdef _OPENMP
         omp_set_num_threads(1);
-        replayBest(carDef, destination, worldSeed);
+        #endif
+
+        replayBest(carDef, destination, worldSeed, filename);
     }
-}
-
-
-void carEvolution(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed)
-{
-    NeuroCar::Population<NeuroCar::SelfDrivingCar> cars;
-
-    for(auto i = 0; i < 100; ++i)
+    else // Car evolution
     {
-        auto sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
-        sdCar->setCar(std::make_shared<Car>(carDef));
-        sdCar->setDestination(destination);
-        sdCar->setWorldSeed(worldSeed);
-        cars.push_back(sdCar);
-    }
+        int32_t nthreads = 1;
 
-    NeuroCar::EvolutionParams<NeuroCar::SelfDrivingCarDNA> params;
-    params.mutationRate = 0.01;
-    params.elitism = 2;
+        // "--max-threads" option: use maximum number of threads?
+        if(cmdOptionExists(argc, argv, "--max-threads"))
+        {
+            #ifdef _OPENMP
+            nthreads = omp_get_max_threads();
+            #endif
+        }
 
-    static auto const preGenHook = [](std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const &)
-    {
-        std::cout << "Generation " << i << std::endl;
-    };
+        // "-t" option: number of threads to use
+        int nt = 0;
+        if(getCmdOption(argc, argv, "-t", nt)) nthreads = nt;
 
-    static auto const saveToFileHook = [](std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const & dnas)
-    {
-        std::cout << "Saving generation " << i << "..." << std::endl;
+        #ifdef _OPENMP
+        omp_set_num_threads(nthreads);
+        #endif
 
-        NeuroCar::SelfDrivingCarDNA const & bestDNA = *std::max_element(dnas.begin(), dnas.end(),
-            [](NeuroCar::SelfDrivingCarDNA const & lhs, NeuroCar::SelfDrivingCarDNA const & rhs)
-            {
-                return lhs.getFitness() < rhs.getFitness();
-            }
+        std::cout << "Running " << nthreads << " thread"
+                  << (nthreads > 1 ? "s" : "") << std::endl;
+
+        // Output file for the best DNA
+        char * f = getCmdOption(argc, argv, "-f");
+        if(f) filename = f;
+
+        carEvolution(
+            carDef,
+            destination,
+            worldSeed,
+            mutationRate,
+            elitism,
+            nindividuals,
+            ngenerations,
+            filename
         );
-
-        auto car = bestDNA.getSubject();
-        std::cout << "Best DNA fitness: " << bestDNA.getFitness() << std::endl;
-        NeuroCar::NeuroController const & nc = car->getNeuroController();
-        NeuroCar::SelfDrivingCar::NeuralNetwork const & nn = nc.getNeuralNetwork();
-        //std::stringstream filename;
-        //filename << "best_nn_" << i << ".txt";
-        //NeuroEvolution::saveToFile(nn, filename.str());
-        NeuroEvolution::saveToFile(nn, "last_best_nn.txt");
-        //std::cout << nn << std::endl;
-    };
-
-    params.preGenHook  = preGenHook;
-    params.postGenHook = saveToFileHook;
-
-    auto dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000000, params);
-}
-
-void replayBest(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed)
-{
-    NeuroEvolution::NeuralNetwork nn;
-
-    if(!loadFromFile("last_best_nn.txt", nn))
-    {
-        std::cout << "Failed to reload nn from file " << std::endl;
-        return;
-    }
-
-    std::cout << nn << std::endl;
-
-    NeuroCar::Individual<NeuroCar::SelfDrivingCar> sdCar = NeuroCar::createIndividual<NeuroCar::SelfDrivingCar>();
-    sdCar->setNeuroController(NeuroCar::NeuroController(nn));
-    sdCar->setCar(std::make_shared<Car>(carDef));
-    sdCar->setDestination(destination);
-    sdCar->setWorldSeed(worldSeed);
-
-    NeuroCar::SelfDrivingCarDNA dna(sdCar);
-    for(auto i = 0u; i < 1; ++i)
-    {
-        auto fitness = dna.computeFitness();
-        std::cout << "Fitness = " << fitness << std::endl;
-        dna.reset();
     }
 }
 
-int main(int argc, char const ** argv)
+int main(int argc, char ** argv)
 {
-    int32_t nthreads = argc > 1 ? std::atoi(argv[1]) : omp_get_max_threads();
-    omp_set_num_threads(nthreads);
     //NeuroCar::stringEvolution();
     carMain(argc, argv);
     return 0;
