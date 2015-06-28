@@ -85,7 +85,7 @@ void carEvolution(CarDef const & carDef, b2Vec2 const & destination, int32_t wor
     }
 
     NeuroCar::EvolutionParams<NeuroCar::SelfDrivingCarDNA> params;
-    params.mutationRate = 0.5;
+    params.mutationRate = 0.01;
     params.elitism = 2;
 
     static auto const preGenHook = [](std::size_t i, NeuroCar::DNAs<NeuroCar::SelfDrivingCarDNA> const &)
@@ -108,9 +108,9 @@ void carEvolution(CarDef const & carDef, b2Vec2 const & destination, int32_t wor
         std::cout << "Best DNA fitness: " << bestDNA.getFitness() << std::endl;
         NeuroCar::NeuroController const & nc = car->getNeuroController();
         NeuroCar::SelfDrivingCar::NeuralNetwork const & nn = nc.getNeuralNetwork();
-        std::stringstream filename;
-        filename << "best_nn_" << i << ".txt";
-        NeuroEvolution::saveToFile(nn, filename.str());
+        //std::stringstream filename;
+        //filename << "best_nn_" << i << ".txt";
+        //NeuroEvolution::saveToFile(nn, filename.str());
         NeuroEvolution::saveToFile(nn, "last_best_nn.txt");
         //std::cout << nn << std::endl;
     };
@@ -118,7 +118,7 @@ void carEvolution(CarDef const & carDef, b2Vec2 const & destination, int32_t wor
     params.preGenHook  = preGenHook;
     params.postGenHook = saveToFileHook;
 
-    auto dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000, params);
+    auto dnas = NeuroCar::evolve<NeuroCar::SelfDrivingCarDNA>(cars, 1000000, params);
 }
 
 void replayBest(CarDef const & carDef, b2Vec2 const & destination, int32_t worldSeed)

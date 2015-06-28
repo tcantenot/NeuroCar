@@ -6,7 +6,7 @@
 namespace NeuroCar {
 
 template <typename T, typename DNAType>
-DNA<T, DNAType>::DNA(Subject subject): m_subject(subject)
+DNA<T, DNAType>::DNA(Subject subject): m_subject(subject), m_fitness(0)
 {
 
 }
@@ -27,6 +27,12 @@ template <typename T, typename DNAType>
 void DNA<T, DNAType>::setSubject(Subject subject)
 {
     m_subject = subject;
+}
+
+template <typename T, typename DNAType>
+typename DNA<T, DNAType>::Fitness DNA<T, DNAType>::getFitness() const
+{
+    return m_fitness;
 }
 
 }

@@ -70,9 +70,7 @@ void SelfDrivingCar::setCar(std::shared_ptr<Car> car)
     m_car->setController(&m_neuroController);
 }
 
-SelfDrivingCarDNA::SelfDrivingCarDNA(Subject subject):
-    DNA(subject),
-    m_fitness(0.0)
+SelfDrivingCarDNA::SelfDrivingCarDNA(Subject subject): DNA(subject)
 {
 
 }
@@ -86,11 +84,12 @@ void SelfDrivingCarDNA::randomize(std::size_t seed)
     nn.synthetize();
 }
 
-SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
+SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness(std::size_t ngen)
 {
     uint32_t const worldWidth = 100;
     uint32_t const worldHeight = 80;
     uint32_t const nbObstacles = 15;
+    uint32_t const seedChangeInterval = 100;
 
     // Create world lambda
     #if CAR_PHYSICS_GRAPHIC_MODE_SFML
@@ -117,6 +116,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     #endif
 
     uint32_t seed = this->getSubject()->getWorldSeed();
+    seed += uint32_t(ngen / seedChangeInterval);
 
     World * world = createWorld(worldWidth, worldHeight, nbObstacles, seed);
 
@@ -150,11 +150,6 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     delete world;
 
     return fitness;
-}
-
-SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::getFitness() const
-{
-    return m_fitness;
 }
 
 void SelfDrivingCarDNA::reset()

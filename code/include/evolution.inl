@@ -35,6 +35,7 @@ using MatingPool = std::vector<RankedDNA<DNAType>>;
 
 template <typename DNAType>
 void evolution(
+    std::size_t ngen,
     DNAs<DNAType> & dnas,
     DNAs<DNAType> & nextGen,
     MatingPool<DNAType> & matingPool,
@@ -54,7 +55,7 @@ void evolution(
     #pragma omp parallel for schedule(dynamic, 1)
     for(auto i = 0u; i < popSize; ++i)
     {
-        dnas[i].computeFitness();
+        dnas[i].computeFitness(ngen);
     }
 
     Fitness cumulativeFitness = 0.0;
@@ -200,7 +201,7 @@ DNAs<DNAType> evolve(
     {
         params.preGenHook(i, dnas);
 
-        evolution(dnas, nextGen, matingPool, params);
+        evolution(i, dnas, nextGen, matingPool, params);
 
         params.postGenHook(i, dnas);
 
@@ -216,7 +217,7 @@ DNAs<DNAType> evolve(
     #pragma omp parallel for schedule(dynamic, 1)
     for(auto i = 0u; i < popSize; ++i)
     {
-        nextGen[i].computeFitness();
+        nextGen[i].computeFitness(ngenerations);
     }
 
     params.postGenHook(ngenerations, nextGen);

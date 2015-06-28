@@ -21,9 +21,7 @@ static const char ALPHABET[] =
 
 }
 
-EvolvingStringDNA::EvolvingStringDNA(Subject subject):
-    DNA(subject),
-    m_fitness(0.0)
+EvolvingStringDNA::EvolvingStringDNA(Subject subject): DNA(subject)
 {
 
 }
@@ -34,7 +32,7 @@ void EvolvingStringDNA::randomize(std::size_t)
     m_subject->setGenes(EvolvingStringDNA::RandomString(m_subject->getTarget().size()));
 }
 
-EvolvingStringDNA::Fitness EvolvingStringDNA::computeFitness()
+EvolvingStringDNA::Fitness EvolvingStringDNA::computeFitness(std::size_t)
 {
     assert(m_subject);
 
@@ -54,11 +52,6 @@ EvolvingStringDNA::Fitness EvolvingStringDNA::computeFitness()
     m_fitness = fitness;
 
     return fitness;
-}
-
-EvolvingStringDNA::Fitness EvolvingStringDNA::getFitness() const
-{
-    return m_fitness;
 }
 
 void EvolvingStringDNA::reset()

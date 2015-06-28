@@ -48,18 +48,13 @@ class EvolvingStringDNA : public DNA<EvolvingString, EvolvingStringDNA>
         EvolvingStringDNA(Subject subject = nullptr);
 
         virtual void randomize(std::size_t seed) override;
-        virtual Fitness computeFitness() override;
-        virtual Fitness getFitness() const override;
+        virtual Fitness computeFitness(std::size_t ngen = 0) override;
         virtual void reset() override;
         virtual Subject crossover(EvolvingStringDNA const & partner) const override;
         virtual void mutate(MutationRate mutationRate) override;
 
         static char RandomChar();
         static std::string RandomString(std::size_t length);
-
-    private:
-        Fitness m_fitness;
-
 };
 
 void stringEvolution();

@@ -28,16 +28,17 @@ class DNA
         Subject getSubject();
         Subject getSubject() const;
         void setSubject(Subject subject);
+        Fitness getFitness() const;
 
         virtual void randomize(std::size_t seed) = 0;
-        virtual Fitness computeFitness() = 0;
-        virtual Fitness getFitness() const = 0;
+        virtual Fitness computeFitness(std::size_t ngen = 0) = 0;
         virtual void reset() = 0;
         virtual Subject crossover(DNAType const & partner) const = 0;
         virtual void mutate(MutationRate mutationRate) = 0;
 
     protected:
         Subject m_subject;
+        Fitness m_fitness;
 };
 
 }
