@@ -11,8 +11,8 @@ NeuroController::NeuroController():
 {
     //Shape
     NeuralNetwork::Shape shape;
-    shape.push_back(2);
-    shape.push_back(4);
+    shape.push_back(12);
+    shape.push_back(12);
     shape.push_back(4);
     m_neuralNetwork.setShape(shape);
     m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
@@ -60,10 +60,10 @@ uint32_t NeuroController::updateFlags(Car * c) const
     Weights inputs;
 
     // Adding raycast results as input
-    /*for(auto d : c->getCollisionDists())
+    for(auto d : c->getCollisionDists())
     {
         inputs.push_back(d);
-    }*/
+    }
 
     // Adding angle to destination as input
     b2Vec2 carPos = c->getPos();

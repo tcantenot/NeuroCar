@@ -101,7 +101,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     {
         World * world = new World(8, 3, &r, 10, 2);
         world->addBorders(w, h);
-        //world->randomize(w, h, nbObstacles, seed);
+        world->randomize(w, h, nbObstacles, seed);
         return world;
     };
     #else
@@ -111,7 +111,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     {
         World * world = new World(8, 3, 10);
         world->addBorders(w, h);
-        //world->randomize(w, h, nbObstacles, seed);
+        world->randomize(w, h, nbObstacles, seed);
         return world;
     };
     #endif
@@ -123,13 +123,11 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness()
     std::shared_ptr<Car> car = this->getSubject()->getCar();
 
     // Generate worlds until one is valid
-#if 0
     while(world->willCollide(car))
     {
         delete world;
         world = createWorld(worldWidth, worldHeight, nbObstacles, ++seed);
     }
-#endif
 
     world->addRequiredDrawable(car);
 

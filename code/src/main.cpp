@@ -57,7 +57,7 @@ void carMain(int argc, char const **)
     carDef.raycastAngles.push_back(-3.0f*b2_pi/8.0f);
 
     b2Vec2 destination(100, 80);
-    int32_t worldSeed = 1;
+    int32_t worldSeed = 0x42;
 
     if(argc == 2)
     {
