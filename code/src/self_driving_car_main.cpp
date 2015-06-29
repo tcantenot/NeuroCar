@@ -144,10 +144,33 @@ void replayBest(
 void selfDrivingCarMain(int argc, char ** argv)
 {
     // "-h" option: Help
-    if(cmdOptionExists(argc, argv, "-h"))
+    if(cmdOptionExists(argc, argv, "-h", "--help"))
     {
-        std::cout << "### NeuroCar Help ###" << std::endl;
-        //TODO
+        std::string usage = "Usage: ";
+        std::string exe = argv[0];
+        std::cout << usage << exe
+                  << " [-h] [-r] [--max-threads] [-t T] [-m M] [-e E]" << std::endl
+                  << std::string(usage.size() + exe.size(), ' ')
+                  << " [-i I] [-g G] [-s S] [-c C] [-f F]"
+                  << std::endl << std::endl;
+
+        std::cout << "Neural network evolution of self driving car with genetic algorithm"
+                  << std::endl << std::endl;
+
+        std::cout << "Optional arguments:" << std::endl;
+
+        std::cout << "  -h, --help      Show this help message and exit"   << std::endl;
+        std::cout << "  -r, --replay    Replay a saved neural network"     << std::endl;
+        std::cout << "  --max-threads   Use the maximum number of threads" << std::endl;
+        std::cout << "  -t T            <T> Number of threads (overwrite --max-threads)" << std::endl;
+        std::cout << "  -m M            <M> Mutation rate"                        << std::endl;
+        std::cout << "  -e E            <E> Elitism"                              << std::endl;
+        std::cout << "  -i I            <I> Number of individuals per generation" << std::endl;
+        std::cout << "  -g G            <G> Number of generations to train"       << std::endl;
+        std::cout << "  -s S            <S> World seed"                           << std::endl;
+        std::cout << "  -c C            <C> World seed change interval"           << std::endl;
+        std::cout << "  -f F            <F> Neural network file "
+                  << "('to load' in replay mode, 'to save to' in evolution mode)" << std::endl;
         return;
     }
 
@@ -197,10 +220,6 @@ void selfDrivingCarMain(int argc, char ** argv)
     dnaParams.worldNbObstacles = 15;
     dnaParams.worldSeedChangeInterval = 10;
 
-    // "-c" option: World seed change interval
-    int32_t ch = 0;
-    if(getCmdOption(argc, argv, "-c", ch)) dnaParams.worldSeedChangeInterval = ch;
-
     // "-s" option: World seed
     int32_t seed = 0;
     if(getCmdOption(argc, argv, "-s", seed)) worldSeed = seed;
@@ -220,6 +239,11 @@ void selfDrivingCarMain(int argc, char ** argv)
     // "-g" option: Number of generations
     std::size_t ngen = 0;
     if(getCmdOption(argc, argv, "-g", ngen)) ngenerations = ngen;
+
+    // "-c" option: World seed change interval
+    int32_t ch = 0;
+    if(getCmdOption(argc, argv, "-c", ch)) dnaParams.worldSeedChangeInterval = ch;
+
 
     // "-r" or "--replay" option: replay best DNA
     if(cmdOptionExists(argc, argv, "-r", "--replay"))
