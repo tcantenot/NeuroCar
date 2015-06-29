@@ -121,7 +121,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness(std::size_t ngen)
     };
     #endif
 
-    uint32_t seed = this->getSubject()->getWorldSeed();
+    uint32_t seed = this->getSubject()->getWorldSeed() + 1; // +1 to make sure seed > 0
     seed += uint32_t(ngen / seedChangeInterval);
 
     World * world = createWorld(worldWidth, worldHeight, nbObstacles, seed);
