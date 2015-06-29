@@ -25,6 +25,7 @@ struct EvolutionParams
     Elitism elitism = 1;
     GenerationHook preGenHook  = GenerationHook(defaultPreGenHook);
     GenerationHook postGenHook = GenerationHook(defaultPostGenHook);
+    DNAParams<DNAType> dnaParams = { };
 
     private:
         static void defaultPreGenHook(std::size_t, DNAs<DNAType> const &) { }

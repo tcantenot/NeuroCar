@@ -75,6 +75,11 @@ SelfDrivingCarDNA::SelfDrivingCarDNA(Subject subject): DNA(subject)
 
 }
 
+void SelfDrivingCarDNA::init(Params const & params)
+{
+    m_params = params;
+}
+
 void SelfDrivingCarDNA::randomize(std::size_t seed)
 {
     auto car = this->getSubject();
@@ -86,29 +91,30 @@ void SelfDrivingCarDNA::randomize(std::size_t seed)
 
 SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness(std::size_t ngen)
 {
-    uint32_t const worldWidth = 100;
-    uint32_t const worldHeight = 80;
-    uint32_t const nbObstacles = 15;
-    uint32_t const seedChangeInterval = 100;
+    uint32_t const worldWidth  = m_params.worldWidth;
+    uint32_t const worldHeight = m_params.worldHeight;
+    uint32_t const nbObstacles = m_params.worldNbObstacles;
+    uint32_t const seedChangeInterval = m_params.worldSeedChangeInterval;
+    uint32_t const simulationRate = m_params.worldSimulationRate;
 
     // Create world lambda
     #if CAR_PHYSICS_GRAPHIC_MODE_SFML
     Renderer r(8, worldWidth, worldHeight);
-    auto const createWorld = [&r](
+    auto const createWorld = [&r, &simulationRate](
         uint32_t w, uint32_t h, uint32_t nbObstacles, uint32_t seed
     )
     {
-        World * world = new World(8, 3, &r, 10, 2);
+        World * world = new World(8, 3, &r, simulationRate, 2);
         world->addBorders(w, h);
         world->randomize(w, h, nbObstacles, seed);
         return world;
     };
     #else
-    auto const createWorld = [](
+    auto const createWorld = [&simulationRate](
         uint32_t w, uint32_t h, uint32_t nbObstacles, uint32_t seed
     )
     {
-        World * world = new World(8, 3, 10);
+        World * world = new World(8, 3, simulationRate);
         world->addBorders(w, h);
         world->randomize(w, h, nbObstacles, seed);
         return world;

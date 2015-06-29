@@ -27,6 +27,7 @@ namespace {
 
 void carEvolution(
     CarDef const & carDef,
+    DNAParams<SelfDrivingCarDNA> const & dnaParams,
     b2Vec2 const & destination,
     int32_t worldSeed,
     double mutationRate,
@@ -84,6 +85,7 @@ void carEvolution(
     params.elitism      = elitism;
     params.preGenHook   = preGenHook;
     params.postGenHook  = saveToFileHook;
+    params.dnaParams    = dnaParams;
 
     static auto const p = [](b2Vec2 const & v)
     {
@@ -106,6 +108,7 @@ void carEvolution(
 
 void replayBest(
     CarDef const & carDef,
+    DNAParams<SelfDrivingCarDNA> const & dnaParams,
     b2Vec2 const & destination,
     int32_t worldSeed,
     std::string const & filename
@@ -130,6 +133,7 @@ void replayBest(
     sdCar->setWorldSeed(worldSeed);
 
     SelfDrivingCarDNA dna(sdCar);
+    dna.init(dnaParams);
     auto fitness = dna.computeFitness();
     std::cout << "Fitness = " << fitness << std::endl;
 }
@@ -186,6 +190,12 @@ void selfDrivingCarMain(int argc, char ** argv)
     std::size_t nindividuals = 100;
     std::size_t ngenerations = 100;
 
+    DNAParams<SelfDrivingCarDNA> dnaParams;
+    dnaParams.worldWidth  = 100;
+    dnaParams.worldHeight = 80;
+    dnaParams.worldNbObstacles = 15;
+    dnaParams.worldSeedChangeInterval = 10;
+
     // "-s" option: World seed
     int32_t seed = 0;
     if(getCmdOption(argc, argv, "-s", seed)) worldSeed = seed;
@@ -216,7 +226,7 @@ void selfDrivingCarMain(int argc, char ** argv)
         omp_set_num_threads(1);
         #endif
 
-        replayBest(carDef, destination, worldSeed, filename);
+        replayBest(carDef, dnaParams, destination, worldSeed, filename);
     }
     else // Car evolution
     {
@@ -247,6 +257,7 @@ void selfDrivingCarMain(int argc, char ** argv)
 
         carEvolution(
             carDef,
+            dnaParams,
             destination,
             worldSeed,
             mutationRate,

@@ -4,7 +4,8 @@
 #include "dna.hpp"
 
 template <typename T, typename DNAType>
-DNA<T, DNAType>::DNA(Subject subject): m_subject(subject), m_fitness(0)
+DNA<T, DNAType>::DNA(Subject subject):
+    m_subject(subject), m_fitness(0)
 {
 
 }

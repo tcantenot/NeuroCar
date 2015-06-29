@@ -52,19 +52,40 @@ class SelfDrivingCar
         b2Vec2 m_destination;
 };
 
+} // NeuroCar
+
+namespace NeuroCar { class SelfDrivingCarDNA; }
+
+template <>
+struct DNAParams<NeuroCar::SelfDrivingCarDNA>
+{
+    uint32_t worldWidth = 100;
+    uint32_t worldHeight = 80;
+    uint32_t worldNbObstacles = 15;
+    uint32_t worldSeedChangeInterval = 100;
+    uint32_t worldSimulationRate = 10;
+};
+
+
+namespace NeuroCar {
+
 class SelfDrivingCarDNA : public DNA<SelfDrivingCar, SelfDrivingCarDNA>
 {
     public:
         SelfDrivingCarDNA(Subject subject = nullptr);
 
+        virtual void init(Params const & params) override;
         virtual void randomize(std::size_t seed) override;
         virtual Fitness computeFitness(std::size_t ngen = 0) override;
         virtual void reset() override;
         virtual Subject crossover(SelfDrivingCarDNA const & partner) const override;
         virtual void mutate(MutationRate mutationRate) override;
+
+    private:
+        Params m_params;
 };
 
-
 }
+
 
 #endif //NEURO_CAR_SELF_DRIVING_CAR_HPP

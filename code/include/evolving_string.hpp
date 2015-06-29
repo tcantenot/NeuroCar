@@ -43,8 +43,9 @@ struct EvolvingString
 class EvolvingStringDNA : public DNA<EvolvingString, EvolvingStringDNA>
 {
     public:
-        EvolvingStringDNA(Subject subject = nullptr);
+        EvolvingStringDNA();
 
+        virtual void init(Params const & params) override;
         virtual void randomize(std::size_t seed) override;
         virtual Fitness computeFitness(std::size_t ngen = 0) override;
         virtual void reset() override;

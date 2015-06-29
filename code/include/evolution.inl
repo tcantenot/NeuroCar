@@ -138,7 +138,9 @@ void evolution(
             DNAType const & parentA = selectParent(matingPool);
             DNAType const & parentB = selectParent(matingPool);
 
-            DNAType childDNA(parentA.crossover(parentB));
+            DNAType childDNA;
+            childDNA.setSubject(parentA.crossover(parentB));
+            childDNA.init(params.dnaParams);
             childDNA.mutate(mutationRate);
 
             nextGen[i] = std::move(childDNA);
@@ -174,7 +176,9 @@ DNAs<DNAType> evolve(
     for(auto i = 0u; i < population.size(); ++i)
     {
         assert(population[i] != nullptr);
-        DNAType dna(population[i]);
+        DNAType dna;
+        dna.setSubject(population[i]);
+        dna.init(params.dnaParams);
         dna.randomize(seed+i);
         dnas.emplace_back(std::move(dna));
     }

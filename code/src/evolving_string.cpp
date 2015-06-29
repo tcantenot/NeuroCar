@@ -19,7 +19,12 @@ static const char ALPHABET[] =
 
 }
 
-EvolvingStringDNA::EvolvingStringDNA(Subject subject): DNA(subject)
+EvolvingStringDNA::EvolvingStringDNA(): DNA()
+{
+
+}
+
+void EvolvingStringDNA::init(Params const &)
 {
 
 }
