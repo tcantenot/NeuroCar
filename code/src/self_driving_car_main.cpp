@@ -93,14 +93,15 @@ void carEvolution(
     };
 
     std::cout << "### NeuroCar Evolution ###" << std::endl;
-    std::cout << "  Number of individuals: " << nindividuals      << std::endl;
-    std::cout << "  Number of generations: " << ngenerations      << std::endl;
-    std::cout << "  Mutation rate:         " << mutationRate      << std::endl;
-    std::cout << "  Elitism:               " << elitism           << std::endl;
-    std::cout << "  World seed:            " << worldSeed         << std::endl;
-    std::cout << "  Starting point:        " << p(carDef.initPos) << std::endl;
-    std::cout << "  Destination:           " << p(destination)    << std::endl;
-    std::cout << "  Output filename:       " << filename          << std::endl;
+    std::cout << "  Number of individuals: " << nindividuals                      << std::endl;
+    std::cout << "  Number of generations: " << ngenerations                      << std::endl;
+    std::cout << "  Mutation rate:         " << mutationRate                      << std::endl;
+    std::cout << "  Elitism:               " << elitism                           << std::endl;
+    std::cout << "  World seed:            " << worldSeed                         << std::endl;
+    std::cout << "  World change interval: " << dnaParams.worldSeedChangeInterval << std::endl;
+    std::cout << "  Starting point:        " << p(carDef.initPos)                 << std::endl;
+    std::cout << "  Destination:           " << p(destination)                    << std::endl;
+    std::cout << "  Output filename:       " << filename                          << std::endl;
     std::cout << std::endl;
 
     evolve<SelfDrivingCarDNA>(cars, ngenerations, params);
@@ -195,6 +196,10 @@ void selfDrivingCarMain(int argc, char ** argv)
     dnaParams.worldHeight = 80;
     dnaParams.worldNbObstacles = 15;
     dnaParams.worldSeedChangeInterval = 10;
+
+    // "-c" option: World seed change interval
+    int32_t ch = 0;
+    if(getCmdOption(argc, argv, "-c", ch)) dnaParams.worldSeedChangeInterval = ch;
 
     // "-s" option: World seed
     int32_t seed = 0;
