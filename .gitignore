@@ -1,2 +1,6 @@
 build
 bin
+*.aux
+*.log
+*.pdf
+*.synctex.gz
