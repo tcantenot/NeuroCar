@@ -31,6 +31,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{gensymb}
+\usepackage{csvsimple}
 
 \begin{document}
 
@@ -236,8 +237,21 @@ The main source source of parallelism is found in the core of the evolution algo
 \end{algorithmic}
 \end{algorithm}
 
+\section{Benchmark}
 
+To see the importance of the number of threads, we benchmarked the evolution of 50 generations of 30 individuals several times:
+\begin{center}
 
+\begin{tabular}{l|c|r}%
+    \bfseries \# threads & \bfseries Time (s) & \bfseries Relative speed% specify table head
+    \csvreader[head to column names]{csv/bench.csv}{}% use head of csv as column names
+    {\\\hline\csvcoli&\csvcolii&\csvcoliii}% specify your coloumns here
+\end{tabular}
+
+\end{center}
+
+We can see that hight the number of threads the faster the evolution is. However, the increase of the performance is not linear. We can see that for a low number of threads the increase is steady but then it slows down around 8. This is in part cause by the overhead introduced by the creation of the OpenMP thread pool. Increasing the size of the population would decrease the impact of the creation of the pool of threads; and the performance should continue to increase with the number of threads.
+    
 \section{Conclusions}
 
 %\end{document}  % This is where a 'short' article might terminate
