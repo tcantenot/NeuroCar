@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#include <iostream>
+
 namespace NeuroCar {
 
 NeuroController::NeuroController():
@@ -11,8 +13,8 @@ NeuroController::NeuroController():
 {
     //Shape
     NeuralNetwork::Shape shape;
-    shape.push_back(12);
-    shape.push_back(12);
+    shape.push_back(11);
+    shape.push_back(11);
     shape.push_back(4);
     m_neuralNetwork.setShape(shape);
     m_neuralNetwork.setActivationFunc(NeuroEvolution::sigmoid);
@@ -69,15 +71,6 @@ uint32_t NeuroController::updateFlags(Car * c) const
     b2Vec2 carPos = c->getPos();
     double carAngle = c->getAngle() * 180.0 / M_PI;
 
-    while(carAngle < -180)
-    {
-        carAngle += 360;
-    }
-
-    while(carAngle > 180)
-    {
-        carAngle -= 360;
-    }
 
 
     double deltax = m_destination.x - carPos.x;
@@ -85,12 +78,26 @@ uint32_t NeuroController::updateFlags(Car * c) const
 
     double angle = std::atan2(deltay, deltax) * 180.0 / M_PI;
 
-    angle += carAngle;
+    angle += carAngle + 90;
+
+    angle = round(angle/90)*90;
+
+    while(angle < -179)
+    {
+        angle += 360;
+    }
+
+    while(angle > 180)
+    {
+        angle -= 360;
+    }
+
+    //std::cout << angle << std::endl;
 
     inputs.push_back(angle);
 
     // Adding distance to destination as input
-    double dist = std::sqrt(
+    /*double dist = std::sqrt(
         std::pow((m_destination.x - carPos.x), 2) +
         std::pow((m_destination.y - carPos.y), 2)
     );
@@ -98,7 +105,7 @@ uint32_t NeuroController::updateFlags(Car * c) const
     // FIXME: ugly
     //dist /= std::sqrt(100.0 * 100.0 + 80.0 * 80.0);
 
-    inputs.push_back(dist);
+    inputs.push_back(dist);*/
 
     // Compute next decision
     Weights outputs = m_neuralNetwork.compute(inputs);
