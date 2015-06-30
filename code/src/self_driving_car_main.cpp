@@ -58,16 +58,14 @@ void carEvolution(
     };
 
 
-    StatsAll stats("statsAll.csv");
-    StatsLastN statsLastN("statsLast10.csv", 10);
+    Stats stats("stats.csv", 10);
 
-    auto const saveToFileHook = [&filename, &stats, &statsLastN](
+    auto const saveToFileHook = [&filename, &stats](
         std::size_t i, DNAs<SelfDrivingCarDNA> const & dnas
     )
     {
         // Save stats to files
         stats(i, dnas);
-        statsLastN(i, dnas);
 
         auto const & bestDNA = *std::max_element(dnas.begin(), dnas.end(),
             [](SelfDrivingCarDNA const & lhs, SelfDrivingCarDNA const & rhs)
