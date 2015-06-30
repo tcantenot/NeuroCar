@@ -28,6 +28,9 @@
 
 \documentclass{acm_proc_article-sp}
 
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
 \begin{document}
 
 \title{Paralellization of a genetic algorithm training framework}
@@ -74,8 +77,8 @@
 % 1st. author
 \alignauthor
 Thierry Cantenot\\
-       \affaddr{Ton num etudiant ?}\\
-       \email{ton@email.com}
+       \affaddr{J114030901}\\
+       \email{thierrycantenot@gmail.com}
 % 2nd. author
 \alignauthor
 Alex Peyrard\\
@@ -144,9 +147,72 @@ This algorithm can be very efficiently parallelized. First, the fitness computat
 Parallelization can also be included in the crossover and mutation steps. But those steps should always have the same time needed by individual, thus it is best to use the second one of the two schemes described.
 
 During crossover and mutation, it also could be possible to parallelize the crossover and mutation over the genes, but it is actually more efficient to parallelize across the individuals in the first place, because it has no dependency over shared data, and thus less overhead.
+
 \section{Coding the framework}
 
+The framework, implemented in C++11, consists of three separate components: a neural network module, a genetic algorithm framework and a physics component for the cars.\\
+All of these three components have been coded from scratch, except the physics simulation which relies on the physics engine Box2D\footnote{http://box2d.org/}. \\
 
+\noindent
+The parallelization is performed exclusively with OpenMP. The main reason is that the training of neural networks with  a genetic algorithm is embarassingly parallel: there is no need for communications. \\
+
+\noindent
+The parallelization is done in two parts:
+\begin{itemize}
+	\item The matrix multiplications, used in the feed forward  algorithm for example, can be parallelized with OpenMP.
+	\item The evolution performed by the genetic algorithm
+\end{itemize}
+\textit{Note:} In our case, the parallelization of the matrix multiplications is disabled because the matrix size are too small; and the computation time would be dominated by the creation of the thread pool. However the implementation has been written\footnote{See matrix.inl}. \\
+
+The main source source of parallelism is found in the core of the evolution algorithm\footnote{See evolution.inl}.
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \For{each generation}
+        \State
+
+        \State \textit{\small{// Parallel section for OpenMP}}
+        \For{each individual}
+            \State compute fitness of individual
+        \EndFor
+
+        \State
+
+        \State \textit{\small{// Parallel reduction(:+) operation with OpenMP}}
+        \State Compute cumulative fitness
+
+        \State
+
+        \State \textit{\small{// Parallel section for OpenMP}}
+        \State \textit{\small{// Create mating pool}}
+        \For{each individual}
+            \State compute relative fitness
+        \EndFor
+
+        \State
+
+        \State \textit{\small{// Serial section}}
+        \State \textit{\small{// Initialize mating pool}}
+        \State sort by decreasing relative fitness and compute scores
+
+        \State
+
+        \State \textit{\small{// Parallel section for OpenMP}}
+        \For{each new\_individual}
+       		\State $p_1 \gets selectParent()$
+       		\State $p_2 \gets selectParent()$
+            \State new\_individual $\gets$ crossover($p_1$, $p_2$)
+            \State mutate(new\_individual)
+            \State add to next generation
+        \EndFor
+
+        \State
+
+        \State generation $\gets$ next\_generation
+
+        \State
+    \EndFor
+\end{algorithmic}
+\end{algorithm}
 
 
 \section{Conclusions}
