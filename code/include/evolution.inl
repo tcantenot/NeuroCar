@@ -170,7 +170,7 @@ DNAs<DNAType> evolve(
     DNAs<DNAType> dnas;
     dnas.reserve(population.size());
 
-    int seed = time(NULL);
+    int seed = 42;//time(NULL);
 
     // Create initial DNAs
     for(auto i = 0u; i < population.size(); ++i)

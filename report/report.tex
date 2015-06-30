@@ -243,14 +243,36 @@ To see the importance of the number of threads, we benchmarked the evolution of 
 \begin{center}
 
 \begin{tabular}{l|c|r}%
-    \bfseries \# threads & \bfseries Time (s) & \bfseries Relative speed% specify table head
+    \bfseries \# threads & \bfseries Time (s) & \bfseries Speedup% specify table head
     \csvreader[head to column names]{csv/bench.csv}{}% use head of csv as column names
     {\\\hline\csvcoli&\csvcolii&\csvcoliii}% specify your coloumns here
 \end{tabular}
 
 \end{center}
 
-We can see that hight the number of threads the faster the evolution is. However, the increase of the performance is not linear. We can see that for a low number of threads the increase is steady but then it slows down around 8. This is in part cause by the overhead introduced by the creation of the OpenMP thread pool. Increasing the size of the population would decrease the impact of the creation of the pool of threads; and the performance should continue to increase with the number of threads.
+We can see that hight the number of threads the faster the evolution is. However, the increase of the performance is not linear. We can see that for a low number of threads the increase is steady but then it slows down around 8. This is in part cause by the overhead introduced by the creation of the OpenMP thread pool. Increasing the size of the population would decrease the impact of the creation of the pool of threads; and the performance should continue to increase with the number of threads. \\
+
+\noindent
+We can also calculte the "experimentally determined serial fraction" using the Karp-Flatt metric:
+\begin{equation}
+	e = \frac{\frac{1}{\psi} - \frac{1}{p}}{1 - \frac{1}{p}}
+\end{equation}
+
+We obtain:
+\begin{center}
+\begin{tabular}{|l|c|}
+	\hline 
+	\# threads & e \\ \hline
+	2 & 0.18\\\hline
+	4 & 0.18\\\hline
+	8 & 0.0073\\\hline
+	16 & 0.060\\ \hline
+\end{tabular}
+
+\end{center}
+
+\noindent
+Unfortunately, we cannot deduce anything from these results because the evolution process relies on random events such as the crossover or the mutations. The random number generators used to produce random values are given a seed based on the time and the thread number: this makes really difficult to make changes so the program is deterministic for benchmark purposes.
     
 \section{Conclusions}
 
