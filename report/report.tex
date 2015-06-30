@@ -30,6 +30,7 @@
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{gensymb}
 
 \begin{document}
 
@@ -76,14 +77,14 @@
 %
 % 1st. author
 \alignauthor
-Thierry Cantenot\\
-       \affaddr{J114030901}\\
-       \email{thierrycantenot@gmail.com}
-% 2nd. author
-\alignauthor
 Alex Peyrard\\
        \affaddr{J114030904}\\
        \email{alex.peyrard@gmail.com}
+% 2nd. author
+\alignauthor
+Thierry Cantenot\\
+       \affaddr{J114030901}\\
+       \email{thierrycantenot@gmail.com}
 }
 % There's nothing stopping you putting the seventh, eighth, etc.
 % author on the opening page (as the 'third row') but we ask,
@@ -151,8 +152,8 @@ During crossover and mutation, it also could be possible to parallelize the cros
 \section{Our problem}
 To test our genetic algorithm framework, we coded a small game in which a car in a 2D top down view can move by accelerating forward and backward and steer. Obstacles are randomly added to the world the cars can move in. A destination point is chosen, and the car should move toward the destination. Thus our fitness function is inversely proportionate to the distance from the car to the destination. If the car touches an obstacle, it dies and the simulation stops here. It is thus better for the car to learn to avoid the obstacles.
 
-The car is controlled by a neural network. The inputs of the neural network are the angle between the car and the destination (rounded to the nearest 90° to only give a sense of direction and avoid overfitting) and a set of distances to detected obstacles in several directions from the car. The car can thus detect obstacles.
-The angle of detection are parametrisable, in our case we detect obstacles at angles of 0°, -90°, 90°, 45°, -45°, 22.5° -22.5°, 67.5°, -67.5° and 180° from the car. It can thus more easily detect obstacles in front of it.
+The car is controlled by a neural network. The inputs of the neural network are the angle between the car and the destination (rounded to the nearest 90$\degree$ to only give a sense of direction and avoid overfitting) and a set of distances to detected obstacles in several directions from the car. The car can thus detect obstacles.
+The angle of detection are parametrisable, in our case we detect obstacles at angles of 0$\degree$, -90$\degree$, 90$\degree$, 45$\degree$, -45$\degree$, 22.5$\degree$ -22.5$\degree$, 67.5$\degree$, -67.5$\degree$ and 180$\degree$ from the car. It can thus more easily detect obstacles in front of it.
 
 The outputs of the neural network are the controls : Accelerate forward, accelerate backwards, steer left and steer right.
 
@@ -160,9 +161,9 @@ The genes of our individuals are the weights of the neural network. All others p
 
 We then used our framework to solve this problem with parallel computing.
 
-\begin{figure}[p]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[scale=0.5]{./images/cars.jpg}
+\includegraphics[width=\linewidth]{./images/cars.jpg}
 \caption{Our car simulation}
 \label{fig1}
 \end{figure}
