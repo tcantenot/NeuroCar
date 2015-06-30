@@ -1,6 +1,7 @@
 #include <self_driving_car_main.hpp>
 
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -19,6 +20,7 @@
 #include <self_driving_car.hpp>
 
 #include <cmd_options.hpp>
+#include <stats.hpp>
 
 
 namespace NeuroCar {
@@ -55,10 +57,18 @@ void carEvolution(
         std::cout << "Generation " << i << std::endl;
     };
 
-    auto const saveToFileHook = [&filename](
-        std::size_t, DNAs<SelfDrivingCarDNA> const & dnas
+
+    StatsAll stats("statsAll.csv");
+    StatsLastN statsLastN("statsLast10.csv", 10);
+
+    auto const saveToFileHook = [&filename, &stats, &statsLastN](
+        std::size_t i, DNAs<SelfDrivingCarDNA> const & dnas
     )
     {
+        // Save stats to files
+        stats(i, dnas);
+        statsLastN(i, dnas);
+
         auto const & bestDNA = *std::max_element(dnas.begin(), dnas.end(),
             [](SelfDrivingCarDNA const & lhs, SelfDrivingCarDNA const & rhs)
             {
