@@ -99,7 +99,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness(std::size_t ngen)
 
     // Create world lambda
     #if CAR_PHYSICS_GRAPHIC_MODE_SFML
-    Renderer r(8, worldWidth, worldHeight);
+    Renderer r(2, worldWidth, worldHeight);
     auto const createWorld = [&r, &simulationRate](
         uint32_t w, uint32_t h, uint32_t nbObstacles, uint32_t seed
     )
@@ -140,6 +140,7 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness(std::size_t ngen)
     world->run();
 
     b2Vec2 pos = car->getPos();
+    b2Vec2 initPos = car->getInitPos();
 
     b2Vec2 destination = this->getSubject()->getDestination();
 
@@ -148,9 +149,14 @@ SelfDrivingCarDNA::Fitness SelfDrivingCarDNA::computeFitness(std::size_t ngen)
         return std::sqrt(std::pow(rhs.x - lhs.x, 2) + std::pow(rhs.y - lhs.y, 2));
     };
 
-    float const maxDistance = distance(b2Vec2(0.0, 0.0), b2Vec2(worldWidth, worldHeight));
+    float const maxDistance = distance(initPos, destination);
 
     Fitness fitness = 1.0 - (distance(pos, destination) / maxDistance);
+    if (fitness < 0.0)
+    {
+        fitness = 0.0;
+    }
+    //Fitness fitness = distance(pos, initPos);
     m_fitness = fitness;
 
     delete world;

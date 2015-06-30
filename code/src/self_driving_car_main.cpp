@@ -193,11 +193,12 @@ void selfDrivingCarMain(int argc, char ** argv)
 
     // Create car
     CarDef carDef;
-    carDef.initPos = b2Vec2(10, 10);
+    carDef.initPos = b2Vec2(25, 250);
     carDef.initAngle = toRadian(carAngle);
     carDef.width = 2.0;
     carDef.height = 3.0;
     carDef.acceleration = 18.0;
+    carDef.raycastDist = 25.0;
 
     //angles to ray cast
     carDef.raycastAngles.push_back(0.0f);
@@ -215,7 +216,7 @@ void selfDrivingCarMain(int argc, char ** argv)
     carDef.raycastAngles.push_back(3.0f*b2_pi/8.0f);
     carDef.raycastAngles.push_back(-3.0f*b2_pi/8.0f);
 
-    b2Vec2 destination(100, 80);
+    b2Vec2 destination(500, 250);
 
     int32_t worldSeed = 0;
     std::string filename = "last_best_nn.txt";
@@ -225,9 +226,9 @@ void selfDrivingCarMain(int argc, char ** argv)
     std::size_t ngenerations = 100;
 
     DNAParams<SelfDrivingCarDNA> dnaParams;
-    dnaParams.worldWidth  = 100;
-    dnaParams.worldHeight = 80;
-    dnaParams.worldNbObstacles = 15;
+    dnaParams.worldWidth  = 500;
+    dnaParams.worldHeight = 500;
+    dnaParams.worldNbObstacles = 200;
     dnaParams.worldSeedChangeInterval = 10;
 
     // "-s" option: World seed
